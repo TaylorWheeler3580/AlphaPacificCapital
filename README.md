@@ -13,7 +13,8 @@ Open `index.html` in a browser. No build step, no server, no dependencies.
 
 ```bash
 pip install python-pptx
-python3 scripts/parse.py    # deck -> data/model.json
+python3 scripts/parse.py           # deck -> data/model.json
+python3 scripts/parse_keywords.py  # Google Ads exports -> data/keywords.json
 python3 scripts/build.py    # template + data -> index.html
 ```
 
@@ -44,9 +45,21 @@ identical impressions, clicks and conversions — so counting it would double SE
 the rest ran in campaigns the report doesn't break out by ad group. Flagged in the
 Search panel rather than silently absorbed.
 
-**Keywords are mostly generic.** Only a branded term ("Elysian at St. Rose") names
-a property, so keyword results can't be split three ways. Branded terms appear on
-their property's tab; the rest sit under All three.
+**Keywords come from Google Ads exports, not the deck.** `scripts/parse_keywords.py`
+reads the three tab-separated exports in `source-reports/keyword-exports/` and attributes
+every keyword by its ad group name, which carries the property. Column sets differ between
+files (the Onyx export has an extra Currency code column), so fields are looked up by
+header name rather than position.
+
+**The export window is labelled 13 Aug – 9 Sep**, but the campaign did not launch until
+19 August, so nothing served in the earlier days. The period is deliberately not carried
+into the dashboard — surfacing it would imply a discrepancy that doesn't exist.
+
+**Quality Score is parsed but not shown.** Too many keywords have none for the column to
+be worth its width.
+
+**Cost is parsed but not displayed**, matching the Platte Valley dashboard. Restoring it
+is a template change only.
 
 **Geography and target fences are account level.** The report doesn't break them out
 by property, so those panels show the same figures on every tab and say so.
