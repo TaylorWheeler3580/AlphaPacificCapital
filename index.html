@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Alpha Pacific Capital — Media Performance</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#0E1419; --ink-2:#1B2530; --ink-3:#2B3947;
+  --paper:#E8EBEE; --card:#FFFFFF; --rule:#DBE0E5; --rule-soft:#EDF0F3;
+  --text:#0E1419; --muted:#5B6672; --dim:#949CA6;
+  --pos:#0B8F63; --warn:#B4741A; --accent:#2F6FED;
+  --disp:#2F6FED; --soc:#7C5CFF; --sem:#DD8A16; --call:#0E9F6E;
+}
+*{box-sizing:border-box}
+body{margin:0; background:var(--paper); color:var(--text); font-size:14px; line-height:1.45;
+  font-family:Archivo,"Helvetica Neue",Arial,sans-serif; font-variant-numeric:tabular-nums}
+.mono{font-family:"IBM Plex Mono",ui-monospace,Menlo,monospace}
+.wrap{max-width:1240px; margin:0 auto; padding:0 22px 60px}
+.eyebrow{font-size:10.5px; font-weight:600; letter-spacing:.13em; text-transform:uppercase; color:var(--dim)}
+
+.rail{background:var(--ink); color:#fff}
+.rail-in{max-width:1240px; margin:0 auto; padding:16px 22px 0}
+.rail-top{display:flex; justify-content:space-between; align-items:baseline; gap:20px; flex-wrap:wrap}
+.rail-top h1{margin:0; font-size:19px; font-weight:600; letter-spacing:-.015em}
+.rail-top h1 span{color:#7E8B99; font-weight:400}
+.rail-meta{font-size:11.5px; color:#7E8B99}
+.rail-strip{max-width:1240px; margin:14px auto 0; padding:9px 22px; display:flex; gap:18px;
+  flex-wrap:wrap; border-top:1px solid #212C38; font-size:11.5px; color:#8794A2}
+.rail-strip b{color:#D6DDE4; font-weight:600}
+
+.tabs{display:flex; gap:2px; border-bottom:1px solid var(--rule); flex-wrap:wrap; margin-top:18px}
+.tabs button{appearance:none; border:0; background:none; cursor:pointer; font-family:inherit;
+  font-size:13.5px; font-weight:500; color:var(--muted); padding:11px 18px;
+  border-bottom:2px solid transparent; margin-bottom:-1px; transition:color .13s,border-color .13s}
+.tabs button:hover{color:var(--text)}
+.tabs button[aria-selected="true"]{color:var(--text); font-weight:600; border-bottom-color:var(--accent)}
+.tabs button:focus-visible{outline:2px solid var(--accent); outline-offset:-2px}
+.tabs button i{display:inline-block; width:7px; height:7px; border-radius:50%; margin-right:8px;
+  vertical-align:0; background:var(--accent)}
+
+#ctx:empty{display:none}
+.ctx-bar{background:var(--card); border:1px solid var(--rule); border-left:3px solid var(--accent);
+  border-radius:4px; margin-top:14px; padding:14px 18px; display:flex; gap:30px;
+  align-items:center; flex-wrap:wrap}
+.ctx-stat{display:flex; flex-direction:column; gap:2px}
+.ctx-stat b{font-size:21px; font-weight:600; letter-spacing:-.02em; line-height:1.1}
+.ctx-stat span{font-size:10.5px; color:var(--dim); letter-spacing:.08em; text-transform:uppercase}
+.ctx-line{flex:1; min-width:230px; font-size:12.5px; color:var(--muted); line-height:1.5}
+.ctx-line b{color:var(--text); font-weight:600}
+.panel{background:var(--card); border:1px solid var(--rule); border-radius:4px; margin-top:14px}
+.panel-h{padding:15px 18px 0; display:flex; justify-content:space-between;
+  align-items:baseline; gap:14px; flex-wrap:wrap}
+.panel-h h2{margin:0; font-size:14.5px; font-weight:600}
+.panel-h .sub{font-size:11.5px; color:var(--muted)}
+.panel-b{padding:14px 18px 18px}
+.note{font-size:11.5px; color:var(--muted); line-height:1.5; margin:12px 0 0}
+.note.warn{color:var(--warn)}
+.empty{font-size:12px; color:var(--muted); padding:10px 0}
+
+.kpis{display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:0}
+.kpi{padding:4px 20px 4px 0}
+.kpi + .kpi{padding-left:20px; border-left:1px solid var(--rule-soft)}
+.kpi b{display:block; font-size:29px; font-weight:600; letter-spacing:-.025em; line-height:1.1}
+.kpi span{font-size:11.5px; color:var(--muted)}
+.kpi em{display:block; font-style:normal; font-size:10.5px; color:var(--dim); margin-top:2px}
+
+.ch-wrap{border-top:1px solid var(--rule-soft)}
+.ch-wrap:first-child{border-top:0}
+.ch-body{padding:2px 0 18px}
+.chev{color:var(--dim); font-size:11px; transition:transform .18s; text-align:center}
+.ch-wrap[data-open="1"] .chev{transform:rotate(90deg)}
+button.ch{width:100%; background:none; border:0; font-family:inherit; color:inherit;
+  text-align:left; cursor:pointer; border-top:0}
+button.ch:hover{background:#FAFBFC}
+button.ch:focus-visible{outline:2px solid var(--accent); outline-offset:-2px}
+.ch{display:grid; grid-template-columns:minmax(110px,1fr) minmax(90px,1.2fr) repeat(4,minmax(54px,.7fr)) 22px;
+  gap:12px; align-items:center; padding:10px 0}
+.ch-name{display:flex; align-items:center; gap:9px; font-weight:600; font-size:13.5px}
+.dot{width:8px; height:8px; border-radius:50%; flex:0 0 8px}
+.track{height:7px; background:var(--rule-soft); border-radius:1px; overflow:hidden}
+.track i{display:block; height:100%; border-radius:1px}
+.num{text-align:right; font-size:13px; font-family:"IBM Plex Mono",monospace}
+.num small{display:block; font-size:9.5px; color:var(--dim); font-weight:500; letter-spacing:.05em;
+  text-transform:uppercase; font-family:Archivo,sans-serif}
+
+.dt{width:100%; border-collapse:collapse; font-size:12.5px}
+.dt caption{text-align:left; font-size:10.5px; font-weight:600; letter-spacing:.12em;
+  text-transform:uppercase; color:var(--dim); padding-bottom:7px}
+.dt th{text-align:right; font-weight:500; font-size:10px; letter-spacing:.07em; text-transform:uppercase;
+  color:var(--dim); padding:0 0 6px 10px; border-bottom:1px solid var(--rule)}
+.dt th:first-child{text-align:left; padding-left:0}
+.dt td{padding:7px 0 7px 10px; border-bottom:1px solid var(--rule-soft); text-align:right;
+  font-family:"IBM Plex Mono",monospace; font-size:12px}
+.dt td:first-child{text-align:left; padding-left:0; font-family:Archivo,sans-serif; font-size:12.5px}
+.dt tr:last-child td{border-bottom:0}
+.dt .sub{display:block; font-size:10.5px; color:var(--dim); font-family:Archivo,sans-serif}
+.cols{display:grid; grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); gap:24px}
+
+.call{border:1px solid var(--rule); border-radius:3px; padding:13px 15px; margin-top:10px}
+.call-h{display:flex; justify-content:space-between; gap:14px; flex-wrap:wrap; align-items:baseline}
+.call-h b{font-size:13px}
+.call-h span{font-size:11.5px; color:var(--muted); font-family:"IBM Plex Mono",monospace}
+.call p{margin:9px 0 0; font-size:12.5px; line-height:1.55; color:var(--text)}
+.call a{color:var(--accent); font-size:11.5px; text-decoration:none; border-bottom:1px solid currentColor}
+.tag{display:inline-block; padding:1px 7px; border-radius:2px; font-size:9.5px; font-weight:600;
+  letter-spacing:.06em; text-transform:uppercase; border:1px solid currentColor; margin-left:7px}
+.tag.ok{color:var(--pos)}
+
+.bar-row{display:grid; grid-template-columns:150px 1fr 66px; gap:12px; align-items:center;
+  padding:7px 0; border-top:1px solid var(--rule-soft); font-size:12.5px}
+.bar-row:first-of-type{border-top:0}
+.bar-row .nm{overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+.bar-row .v{text-align:right; font-family:"IBM Plex Mono",monospace}
+
+footer{margin-top:26px; padding-top:14px; border-top:1px solid var(--rule);
+  font-size:11.5px; color:var(--muted); display:flex; justify-content:space-between;
+  gap:18px; flex-wrap:wrap}
+a.site{color:var(--accent); text-decoration:none}
+a.site:hover{text-decoration:underline}
+@media (max-width:820px){
+  .ch{grid-template-columns:minmax(100px,1fr) repeat(3,minmax(52px,1fr))}
+  .ch .track-cell{display:none}
+  .kpi{padding:8px 0; border-left:0!important}
+}
+@media print{
+  .tabs{display:none!important}
+  [data-tabhide]{display:block!important}
+  body{background:#fff}
+  .panel{break-inside:avoid}
+}
+</style>
+</head>
+<body>
+
+<header class="rail">
+  <div class="rail-in">
+    <div class="rail-top">
+      <h1>Alpha Pacific Capital <span>· media performance</span></h1>
+      <div class="rail-meta" id="railMeta"></div>
+    </div>
+    <nav class="tabs" id="tabs" role="tablist"></nav>
+  </div>
+  <div class="rail-strip" id="strip"></div>
+</header>
+
+<main class="wrap">
+  <div id="ctx"></div>
+
+  <section class="panel" id="kpiPanel">
+    <div class="panel-h"><h2 id="kpiTitle">Delivery</h2><div class="sub" id="kpiSub"></div></div>
+    <div class="panel-b"><div class="kpis" id="kpis"></div></div>
+  </section>
+
+  <section class="panel" id="chPanel">
+    <div class="panel-h"><h2>Tactics</h2><div class="sub" id="chSub"></div></div>
+    <div class="panel-b" id="channels"></div>
+  </section>
+
+  <section class="panel" id="creativePanel">
+    <div class="panel-h"><h2>Creative</h2><div class="sub" id="crSub"></div></div>
+    <div class="panel-b" id="creative"></div>
+  </section>
+
+  <section class="panel" id="semPanel">
+    <div class="panel-h"><h2>Search</h2><div class="sub" id="semSub"></div></div>
+    <div class="panel-b" id="sem"></div>
+  </section>
+
+  <section class="panel" id="geoPanel">
+    <div class="panel-h"><h2>Geography</h2><div class="sub" id="geoSub"></div></div>
+    <div class="panel-b" id="geo"></div>
+  </section>
+
+  <footer>
+    <div>Built from the pulseMax report for <span id="footPeriod"></span>. Campaign, ad-group and creative names carry the property, which is how each tactic is attributed.</div>
+    <div id="footSite"></div>
+  </footer>
+</main>
+
+<script>
+const D = {"client":"Alpha Pacific Capital","period":"Aug 19 \u2013 Sep 9, 2026","order":["CAN","ONX","ELY"],"properties":{"CAN":{"key":"CAN","name":"Camino Al Norte","site":"https://caminoalnorteapts.com/","accent":"#C2691D","match":"camino\\s*al\\s*norte","channels":{"Display":{"impressions":9203,"clicks":10,"visits":0,"conversions":0,"engagement":0,"leads":0},"SEM":{"impressions":4333,"clicks":404,"visits":0,"conversions":0,"engagement":0,"leads":0}},"creatives":{"Display sizes":[{"name":"320x50_Camino Al Norte CR31358.gif","impressions":5376,"clicks":4,"ctr":0.07,"size":"320x50"},{"name":"300x600_Camino Al Norte CR31358.gif","impressions":283,"clicks":0,"ctr":0,"size":"300x600"}],"Display":[{"name":"Camino Al Norte CR31358.gif","impressions":9203,"clicks":10,"ctr":0.11,"size":""}]},"adGroups":[{"name":"Camino Al Norte Apts_Townhome rentals","impressions":3006,"clicks":326,"ctr":10.84,"conversions":0},{"name":"Camino Al Norte Apts_Apartment rentals","impressions":1327,"clicks":78,"ctr":5.88,"conversions":0}],"keywords":[],"campaigns":[{"channel":"Display","name":"Camino Al Norte Apts_GFT","impressions":9203,"clicks":10,"ctr":0.11,"visits":0,"conversions":0}]},"ONX":{"key":"ONX","name":"The Onyx","site":"https://theonyxapartments.com/","accent":"#2F6FED","match":"\\bonyx\\b","channels":{"Social":{"impressions":20065,"clicks":449,"visits":0,"conversions":67,"engagement":479,"leads":67},"Display":{"impressions":52382,"clicks":103,"visits":0,"conversions":0,"engagement":0,"leads":0},"SEM":{"impressions":5697,"clicks":306,"visits":0,"conversions":0,"engagement":0,"leads":0}},"creatives":{"Display":[{"name":"The Onyx CR31328.gif","impressions":52382,"clicks":103,"ctr":0.2,"size":""}]},"adGroups":[{"name":"The Onyx Apartments_Luxury Apartment Rentals","impressions":4078,"clicks":206,"ctr":5.05,"conversions":0},{"name":"The Onyx Apartments_Luxury Townhome Rentals","impressions":1619,"clicks":100,"ctr":6.18,"conversions":0}],"keywords":[],"campaigns":[{"channel":"Social","name":"The Onyx Apartments_LeadGen","impressions":20065,"clicks":449,"ctr":2.24,"engagement":479,"leads":67,"visits":0,"conversions":67},{"channel":"Display","name":"The Onyx Apartments_GFT","impressions":52382,"clicks":103,"ctr":0.2,"visits":0,"conversions":0}]},"ELY":{"key":"ELY","name":"Elysian at St. Rose","site":"https://elysianatstrose.com/","accent":"#0E9F6E","match":"elysian|st\\.?\\s*rose","channels":{"Display":{"impressions":11243,"clicks":31,"visits":0,"conversions":0,"engagement":0,"leads":0},"SEM":{"impressions":3410,"clicks":238,"visits":0,"conversions":1,"engagement":0,"leads":0}},"creatives":{"Display sizes":[{"name":"320x50_Elysian At St. Rose CR31360.gif","impressions":7745,"clicks":16,"ctr":0.21,"size":"320x50"},{"name":"640x100_Elysian At St. Rose CR31360.gif","impressions":4,"clicks":1,"ctr":25,"size":"640x100"},{"name":"728x90_Elysian At St. Rose CR31360.gif","impressions":2139,"clicks":11,"ctr":0.51,"size":"728x90"}],"Display":[{"name":"Elysian At St. Rose CR31360.gif","impressions":11243,"clicks":31,"ctr":0.28,"size":""}]},"adGroups":[{"name":"Elysian at St. Rose_Luxury Apartment Rentals","impressions":3410,"clicks":238,"ctr":6.98,"conversions":1}],"keywords":[{"name":"Elysian at St. Rose","impressions":114,"clicks":46,"ctr":40.35,"conversions":1}],"campaigns":[{"channel":"Display","name":"Elysian at St. Rose_GFT","impressions":11243,"clicks":31,"ctr":0.28,"visits":0,"conversions":0}]}},"shared":{"channels":{"Display":{"Impressions":72800,"Clicks":143,"CTR(%)":0.2},"Social":{"Impressions":20100,"Clicks":449,"CTR(%)":2.24,"Engagement":481,"Total Conversions/Leads":0},"SEM":{"Impressions":14300,"Clicks":1100,"CTR(%)":7.78,"Primary Conversions":2,"All Conversions":2}},"geo":[{"city":"Las Vegas","state":"Nevada","impressions":23909,"clicks":62,"visits":0},{"city":"Henderson","state":"Nevada","impressions":2991,"clicks":7,"visits":0},{"city":"Phoenix","state":"Arizona","impressions":2005,"clicks":5,"visits":0},{"city":"Tucson","state":"Arizona","impressions":866,"clicks":4,"visits":0},{"city":"Victoria","state":"Minnesota","impressions":2,"clicks":2,"visits":0}],"zones":[{"name":"Camino al Norte --4970 Camino Al Norte, North Las Vegas, NV 89031","visits":0,"conversions":0},{"name":"The Onyx --5150 Duke Ellington Way, Las Vegas, NV 89119","visits":0,"conversions":0}],"fences":[{"name":"St. Rose Dominican Hospital, Siena Campus -3001 St Rose Pkwy, Henderson, NV 89052","impressions":17,"clicks":0,"visits":0},{"name":"Aliante Golf Club / Sun City Aliante-3100 Elkhorn Rd &-7394 N Aliante Pkwy, North Las Vegas, NV 89084","impressions":1168,"clicks":0,"visits":0},{"name":"Del Frisco's Double Eagle Steakhouse \u2014-3925 Paradise Rd, Las Vegas, NV 89169","impressions":316,"clicks":0,"visits":0},{"name":"Mandalay Bay \u2014-3950 S Las Vegas Blvd, Las Vegas, NV 89119","impressions":12482,"clicks":35,"visits":0},{"name":"Excalibur \u2014-3850 S Las Vegas Blvd, Las Vegas, NV 89109","impressions":28805,"clicks":57,"visits":0}],"calls":[{"date":"08-2026","total":2,"answered":2,"avgDur":"00:01:21"}],"callLog":[{"date":"2026-08-28","source":"Google Ads","name":"REAL ESTATE EVE","number":"+17025239385","duration":"00:01:07","recording":"https://api.callrail.com/v3/a/ACCb1341b95bb3542fca4b85d5646218979/calls/CAL01a0490efc2a75c591b37524a4b6ac16/recording","id":"CAL01a0490efc2a75c591b37524a4b6ac16","answered":true,"summary":"The customer called the leasing office believing they were returning a call from the property, but the agent clarified that the office had not initiated any outbound calls. The agent explained that this is a leasing office for apartment rentals. The call appears to be a misunderstanding, with the customer contacting the wrong party or confusing the purpose of the incoming call.","sec":67},{"date":"2026-08-25","source":"Google Ads","name":"LAS VEGAS    NV","number":"+17023792751","duration":"00:01:36","recording":"https://api.callrail.com/v3/a/ACCb1341b95bb3542fca4b85d5646218979/calls/CAL01a039b1696976408c732b4f1425247e/recording","id":"CAL01a039b1696976408c732b4f1425247e","answered":true,"summary":"Customer Sa. called to inquire about the scheduled time for unit inspections at the community. Agent Karina Helmi confirmed that inspections begin at 9am across multiple buildings, but clarified that the inspection team was already on property at 8am knocking on doors to notify residents. The customer's question was resolved after providing their apartment number (1078) and learning that the early knock on their door at 8 o'clock was from the inspection team giving advance notice.","sec":96}],"callStatus":{"CAL01a0490efc2a75c591b37524a4b6ac16":{"answered":true,"summary":"The customer called the leasing office believing they were returning a call from the property, but the agent clarified that the office had not initiated any outbound calls. The agent explained that this is a leasing office for apartment rentals. The call appears to be a misunderstanding, with the customer contacting the wrong party or confusing the purpose of the incoming call."},"CAL01a039b1696976408c732b4f1425247e":{"answered":true,"summary":"Customer Sa. called to inquire about the scheduled time for unit inspections at the community. Agent Karina Helmi confirmed that inspections begin at 9am across multiple buildings, but clarified that the inspection team was already on property at 8am knocking on doors to notify residents. The customer's question was resolved after providing their apartment number (1078) and learning that the early knock on their door at 8 o'clock was from the inspection team giving advance notice."}},"keywords":[{"name":"rentals in north las vegas","impressions":2319,"clicks":214,"ctr":9.23,"conversions":0},{"name":"luxury apartment homes","impressions":2674,"clicks":194,"ctr":7.26,"conversions":1},{"name":"townhome options","impressions":1601,"clicks":99,"ctr":6.18,"conversions":0},{"name":"las vegas residences","impressions":1798,"clicks":88,"ctr":4.89,"conversions":0},{"name":"north las vegas townhomes","impressions":328,"clicks":44,"ctr":13.41,"conversions":0},{"name":"luxury living las vegas","impressions":871,"clicks":43,"ctr":4.94,"conversions":0},{"name":"pet friendly rentals","impressions":319,"clicks":40,"ctr":12.54,"conversions":0}],"devices":[{"name":"Mobile","impressions":63980,"clicks":122},{"name":"Tablets","impressions":5544,"clicks":19},{"name":"Desktops and Laptops","impressions":3304,"clicks":3}],"platforms":[],"period":"Aug 19 \u2013 Sep 9, 2026","metaMonthly":[{"date":"09-2026","impressions":9329,"clicks":221,"ctr":2.37,"leads":38},{"date":"08-2026","impressions":10736,"clicks":228,"ctr":2.12,"leads":29}],"metaPlatform":[{"name":"facebook","impressions":11961,"clicks":290,"ctr":2.42,"engagement":299,"leads":50},{"name":"instagram","impressions":8104,"clicks":159,"ctr":1.96,"engagement":180,"leads":17}],"metaReach":{"impressions":21645,"reach":8697,"frequency":2.49},"metaGender":[{"name":"female","impressions":11341,"clicks":257,"ctr":2.27,"leads":36},{"name":"male","impressions":10177,"clicks":212,"ctr":2.08,"leads":33},{"name":"unknown","impressions":120,"clicks":3,"ctr":2.5,"leads":2}],"metaGeo":[{"name":"Las Vegas, NV","impressions":20042,"clicks":449},{"name":"San Diego, CA","impressions":2,"clicks":0},{"name":"Denver-Aurora, CO","impressions":2,"clicks":0},{"name":"Los Angeles, CA","impressions":6,"clicks":0},{"name":"Bakersfield, CA","impressions":4,"clicks":0}],"metaPost":{"engagement":479,"likes":2,"shares":4,"reactions":23,"clicks":449},"semDevices":[{"name":"MOBILE","impressions":13870,"clicks":1062,"ctr":7.66},{"name":"DESKTOP","impressions":1107,"clicks":100,"ctr":9.03},{"name":"TABLET","impressions":220,"clicks":13,"ctr":5.91}],"semGeo":[{"name":"Las Vegas Valley","state":"Nevada","impressions":13519,"clicks":1027},{"name":"North Las Vegas","state":"Nevada","impressions":571,"clicks":50},{"name":"Enterprise","state":"Nevada","impressions":281,"clicks":25},{"name":"Paradise","state":"Nevada","impressions":221,"clicks":19},{"name":"Las Vegas","state":"Nevada","impressions":238,"clicks":18}]}};
+const CH_COLOR = {Display:"var(--disp)", Social:"var(--soc)", SEM:"var(--sem)"};
+const CH_ORDER = ["Display","Social","SEM"];
+const state = {tab:"ALL", open:{}};
+
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const n0 = v => Math.round(Number(v)||0).toLocaleString("en-US");
+const n1 = v => (Number(v)||0).toLocaleString("en-US",{maximumFractionDigits:1});
+const pct = v => (Number(v)||0).toFixed(Number(v)>=10?1:2)+"%";
+const compact = v => { v=Number(v)||0; return v>=1e6?(v/1e6).toFixed(1)+"M":v>=1e4?Math.round(v/1e3)+"K":n0(v); };
+const secs = v => { const m=Math.floor(v/60), r=v%60; return m?`${m}m ${r}s`:`${r}s`; };
+const props = () => state.tab === "ALL" ? D.order : [state.tab];
+const isAll = () => state.tab === "ALL";
+const accent = () => isAll() ? "#2F6FED" : D.properties[state.tab].accent;
+
+function chanTotals(){
+  const out = {};
+  props().forEach(p => {
+    const c = D.properties[p].channels;
+    for (const ch in c){
+      const t = out[ch] || (out[ch] = {impressions:0,clicks:0,visits:0,conversions:0,engagement:0,leads:0});
+      for (const k in t) t[k] += c[ch][k]||0;
+    }
+  });
+  return CH_ORDER.filter(c => out[c]).map(c => ({channel:c, ...out[c]}));
+}
+function grand(){
+  const t = {impressions:0,clicks:0,visits:0,conversions:0,engagement:0,leads:0};
+  chanTotals().forEach(r => { for (const k in t) t[k] += r[k]||0; });
+  return t;
+}
+function tbl(caption, head, rows, empty){
+  if (!rows.length) return `<div><div class="eyebrow">${caption}</div><p class="empty">${empty||"Not reported."}</p></div>`;
+  return `<table class="dt"><caption>${caption}</caption><thead><tr>${
+    head.map(h=>`<th>${h}</th>`).join("")}</tr></thead><tbody>${
+    rows.map(r=>`<tr>${r.map(c=>`<td>${c}</td>`).join("")}</tr>`).join("")}</tbody></table>`;
+}
+
+/* ---------- tabs ---------- */
+function paintTabs(){
+  $("tabs").innerHTML = [["ALL","All three"]].concat(D.order.map(p => [p, D.properties[p].name]))
+    .map(([k,l]) => `<button role="tab" data-t="${k}" aria-selected="${state.tab===k}">${
+      k==="ALL"?"":`<i style="background:${D.properties[k].accent}"></i>`}${esc(l)}</button>`).join("");
+  $("tabs").onclick = e => { const b=e.target.closest("button"); if(!b) return;
+    state.tab = b.dataset.t; state.open = {}; render(); };
+}
+
+/* ---------- panels ---------- */
+function accountTotals(){
+  const t = {impressions:0, clicks:0, leads:0, conversions:0};
+  D.order.forEach(p => {
+    const c = D.properties[p].channels;
+    for (const ch in c){
+      t.impressions += c[ch].impressions||0; t.clicks += c[ch].clicks||0;
+      t.leads += c[ch].leads||0; t.conversions += c[ch].conversions||0;
+    }
+  });
+  return t;
+}
+function paintCtx(){
+  if (isAll()){ $("ctx").innerHTML = ""; return; }
+  const p = D.properties[state.tab];
+  const me = grand(), all = accountTotals();
+  const share = all.impressions ? me.impressions/all.impressions*100 : 0;
+  const rank = D.order.map(k => {
+    const c = D.properties[k].channels;
+    return {k, v: Object.values(c).reduce((s,x)=>s+(x.impressions||0),0)};
+  }).sort((a,b)=>b.v-a.v).findIndex(x => x.k === state.tab) + 1;
+  const ran = CH_ORDER.filter(c => p.channels[c]);
+  const missing = CH_ORDER.filter(c => !p.channels[c]);
+  $("ctx").innerHTML = `<div class="ctx-bar">
+    <div class="ctx-stat"><b class="mono">${pct(share)}</b><span>of account impressions</span></div>
+    <div class="ctx-stat"><b class="mono">#${rank}</b><span>of ${D.order.length} properties</span></div>
+    <div class="ctx-stat"><b class="mono">${me.leads?n0(me.leads):"—"}</b><span>leads</span></div>
+    <p class="ctx-line"><b>${esc(p.name)}</b> is running ${ran.join(", ")}${
+      missing.length?` · no ${missing.join(", ")}`:""}.</p>
+  </div>`;
+}
+function paintKPIs(){
+  const t = grand();
+  const ctr = t.impressions ? t.clicks/t.impressions*100 : 0;
+  const cells = [
+    ["Impressions", n0(t.impressions), ""],
+    ["Clicks", n0(t.clicks), pct(ctr)+" CTR"],
+    ["Leads", n0(t.leads), t.leads ? "Meta lead forms" : "none recorded"],
+    ["Conversions", n0(t.conversions), "all tracked actions"],
+  ];
+  $("kpiTitle").textContent = isAll() ? "Delivery — all three properties" : "Delivery";
+  $("kpiSub").textContent = D.period;
+  $("kpis").innerHTML = cells.map(([l,v,n]) =>
+    `<div class="kpi"><b class="mono">${v}</b><span>${l}</span><em>${n}</em></div>`).join("");
+}
+
+function paintChannels(){
+  const rows = chanTotals();
+  const max = Math.max(...rows.map(r=>r.impressions), 1);
+  $("chSub").textContent = rows.length ? `Select a tactic for detail` : "";
+  $("channels").innerHTML = rows.length ? rows.map(r => {
+    const open = !!state.open[r.channel];
+    return `<div class="ch-wrap" data-open="${open?1:0}">
+      <button class="ch" data-ch="${r.channel}" aria-expanded="${open}">
+        <span class="ch-name"><i class="dot" style="background:${CH_COLOR[r.channel]}"></i>${r.channel}</span>
+        <span class="track-cell"><span class="track"><i style="width:${Math.max(2,r.impressions/max*100)}%;background:${CH_COLOR[r.channel]}"></i></span></span>
+        <span class="num">${n0(r.impressions)}<small>impr</small></span>
+        <span class="num">${n0(r.clicks)}<small>clicks</small></span>
+        <span class="num">${r.impressions?pct(r.clicks/r.impressions*100):"—"}<small>ctr</small></span>
+        <span class="num">${r.leads?n0(r.leads):(r.conversions?n0(r.conversions):"—")}<small>${r.leads?"leads":"conv"}</small></span>
+        <span class="chev">▶</span>
+      </button>
+      ${open ? `<div class="ch-body">${tacticDetail(r)}</div>` : ""}
+    </div>`;
+  }).join("")
+    : `<p class="empty">No tactics attributed to this property.</p>`;
+  // append the campaign table before wiring handlers: assigning innerHTML again
+  // would re-parse the container and drop the listeners
+  const camp = props().flatMap(p => D.properties[p].campaigns.map(c => ({...c, prop:p})));
+  if (camp.length && isAll()) $("channels").insertAdjacentHTML("beforeend",
+    `<div style="margin-top:18px">${
+      tbl("Campaigns", ["Campaign","Impr.","Clicks","CTR","Property"],
+        camp.sort((a,b)=>b.impressions-a.impressions).map(c => [
+          esc(c.name), n0(c.impressions), n0(c.clicks), pct(c.ctr),
+          esc(D.properties[c.prop].name)]))}</div>`);
+
+  $("channels").querySelectorAll("button.ch").forEach(b => b.onclick = () => {
+    state.open[b.dataset.ch] = !state.open[b.dataset.ch]; paintChannels();
+  });
+}
+
+function tacticDetail(r){
+  const S = D.shared, P = [];
+  const mine = props();
+  const camp = mine.flatMap(p => D.properties[p].campaigns
+    .filter(c => c.channel === r.channel).map(c => ({...c, prop:p})));
+
+  if (r.channel === "Social"){
+    const onyxOnly = !isAll();
+    if (S.metaReach) P.push(`<div><div class="eyebrow">Reach</div>
+      <div class="kpis" style="margin-top:8px">
+        <div class="kpi"><b class="mono">${n0(S.metaReach.reach)}</b><span>People reached</span>
+          <em>unique accounts</em></div>
+        <div class="kpi"><b class="mono">${S.metaReach.frequency.toFixed(2)}×</b><span>Frequency</span>
+          <em>times each saw an ad</em></div>
+        <div class="kpi"><b class="mono">${r.leads&&S.metaReach.reach
+          ? (r.leads/S.metaReach.reach*100).toFixed(2)+"%" : "—"}</b><span>Lead rate</span>
+          <em>leads per person reached</em></div>
+      </div></div>`);
+    if (S.metaPlatform) P.push(tbl("Facebook vs Instagram",
+      ["Platform","Impr.","Clicks","CTR","Leads"],
+      S.metaPlatform.map(x => [esc(x.name==="facebook"?"Facebook":"Instagram"),
+        n0(x.impressions), n0(x.clicks), pct(x.ctr), n0(x.leads)])));
+    if (S.metaMonthly) P.push(tbl("By month", ["Month","Impr.","Clicks","CTR","Leads"],
+      S.metaMonthly.slice().sort((a,b)=>a.date<b.date?-1:1).map(x => [
+        esc(x.date.replace("08-","Aug ").replace("09-","Sep ")),
+        n0(x.impressions), n0(x.clicks), pct(x.ctr), n0(x.leads)])));
+    if (S.metaGender) P.push(tbl("Gender", ["Gender","Impr.","Clicks","CTR","Leads"],
+      S.metaGender.map(x => [esc(x.name[0].toUpperCase()+x.name.slice(1)),
+        n0(x.impressions), n0(x.clicks), pct(x.ctr), n0(x.leads)])));
+    if (S.metaPost) P.push(tbl("Engagement", ["Interaction","Count"],
+      [["Post engagements", n0(S.metaPost.engagement)],
+       ["Link clicks", n0(S.metaPost.clicks)],
+       ["Reactions", n0(S.metaPost.reactions)],
+       ["Shares", n0(S.metaPost.shares)],
+       ["Page likes", n0(S.metaPost.likes)]]));
+    return `<div class="cols">${P.join("")}</div>
+      <p class="note">${onyxOnly
+        ? "Meta runs only for The Onyx, so every figure in this section belongs to this property."
+        : "Meta runs only for The Onyx; these figures are that campaign."}
+        Leads are Meta lead-form submissions and have not been matched against leasing records.</p>`;
+  }
+
+  if (r.channel === "Display"){
+    P.push(tbl("Campaigns", ["Campaign","Impr.","Clicks","CTR","Visits"],
+      camp.sort((a,b)=>b.impressions-a.impressions).map(c => [
+        esc(c.name), n0(c.impressions), n0(c.clicks), pct(c.ctr),
+        c.visits?n0(c.visits):"0"])));
+    const cr = mine.flatMap(p => (D.properties[p].creatives["Display sizes"]||[])
+      .map(c => ({...c, prop:p})));
+    if (cr.length) P.push(tbl("By banner size", ["Size","Impr.","Clicks","CTR"],
+      cr.sort((a,b)=>b.impressions-a.impressions).map(c => [
+        esc(c.size||"—"), n0(c.impressions), n0(c.clicks), pct(c.ctr)])));
+    if (S.devices.length) P.push(tbl("Devices", ["Device","Impr.","Clicks"],
+      S.devices.map(x => [esc(x.name), n0(x.impressions), n0(x.clicks)])));
+    if (S.fences.length) P.push(tbl("Target fences", ["Fence","Impr."],
+      S.fences.slice().sort((a,b)=>b.impressions-a.impressions).slice(0,6)
+        .map(f => [esc(f.name), n0(f.impressions)])));
+    return `<div class="cols">${P.join("")}</div>
+      <p class="note">Devices and target fences are reported for the whole geofencing
+      buy, not per property. No foot-traffic visits have registered yet.</p>`;
+  }
+
+  // SEM
+  const ags = mine.flatMap(p => D.properties[p].adGroups.map(a => ({...a, prop:p})));
+  P.push(tbl("Ad groups", ["Ad group","Impr.","Clicks","CTR","Conv."],
+    ags.sort((a,b)=>b.impressions-a.impressions).map(a => [
+      esc(a.name), n0(a.impressions), n0(a.clicks), pct(a.ctr),
+      a.conversions?n0(a.conversions):"—"])));
+  const bkw = mine.flatMap(p => D.properties[p].keywords);
+  if (bkw.length) P.push(tbl("Branded keywords", ["Keyword","Impr.","Clicks","CTR","Conv."],
+    bkw.map(k => [esc(k.name), n0(k.impressions), n0(k.clicks), pct(k.ctr),
+      k.conversions?n0(k.conversions):"—"])));
+  if (S.semDevices) P.push(tbl("Devices", ["Device","Impr.","Clicks","CTR"],
+    S.semDevices.map(x => [esc(x.name), n0(x.impressions), n0(x.clicks), pct(x.ctr)])));
+  if (S.semGeo) P.push(tbl("Cities", ["City","Impr.","Clicks"],
+    S.semGeo.slice().sort((a,b)=>b.impressions-a.impressions).slice(0,6)
+      .map(x => [`${esc(x.name)}<span class="sub">${esc(x.state)}</span>`,
+        n0(x.impressions), n0(x.clicks)])));
+  return `<div class="cols">${P.join("")}</div>
+    <p class="note">Ad groups carry the property name; devices, cities and generic
+    keywords are reported for the account as a whole.</p>`;
+}
+
+function paintCreative(){
+  const groups = {};
+  props().forEach(p => {
+    const cr = D.properties[p].creatives;
+    for (const g in cr) (groups[g] = groups[g] || []).push(...cr[g].map(c => ({...c, prop:p})));
+  });
+  const keys = Object.keys(groups);
+  $("crSub").textContent = keys.length ? "By tactic" : "";
+  if (!keys.length){ $("creative").innerHTML = `<p class="empty">No creative reported for this property.</p>`; return; }
+  $("creative").innerHTML = `<div class="cols">${keys.map(g => {
+    const rows = groups[g].sort((a,b)=>b.impressions-a.impressions);
+    return tbl(g, ["Creative", ...(g==="Display sizes"?["Size"]:[]), "Impr.","Clicks","CTR"],
+      rows.map(c => [
+        `${esc(c.name)}${isAll()?`<span class="sub">${esc(D.properties[c.prop].name)}</span>`:""}`,
+        ...(g==="Display sizes"?[esc(c.size||"—")]:[]),
+        n0(c.impressions), n0(c.clicks), pct(c.ctr)]));
+  }).join("")}</div>
+  <p class="note">Creative is attributed by the property named in each file. The banner set runs
+  one creative per property across several sizes.</p>`;
+}
+
+function paintSEM(){
+  const ags = props().flatMap(p => D.properties[p].adGroups.map(a => ({...a, prop:p})));
+  const kw  = props().flatMap(p => D.properties[p].keywords.map(k => ({...k, prop:p, branded:true})));
+  const shared = isAll() ? D.shared.keywords.map(k => ({...k, branded:false})) : [];
+  const semTot = D.shared.channels.SEM || {};
+  const attributed = ags.reduce((s,a)=>s+a.impressions,0);
+
+  $("semSub").textContent = ags.length ? "Ad groups and keywords" : "";
+  if (!ags.length && !kw.length){ $("sem").innerHTML = `<p class="empty">No search activity for this property.</p>`; return; }
+
+  const gap = isAll() && semTot.Impressions ? semTot.Impressions - attributed : 0;
+  $("sem").innerHTML = `<div class="cols">
+    ${tbl("Ad groups", ["Ad group", ...(isAll()?["Property"]:[]), "Impr.","Clicks","CTR","Conv."],
+      ags.sort((a,b)=>b.impressions-a.impressions).map(a => [
+        esc(a.name), ...(isAll()?[esc(D.properties[a.prop].name)]:[]),
+        n0(a.impressions), n0(a.clicks), pct(a.ctr), a.conversions?n0(a.conversions):"—"]))}
+    ${tbl(isAll()?"Keywords":"Branded keywords", ["Keyword","Impr.","Clicks","CTR","Conv."],
+      kw.concat(shared).sort((a,b)=>b.impressions-a.impressions).map(k => [
+        `${esc(k.name)}${k.branded?`<span class="sub">names this property</span>`:""}`,
+        n0(k.impressions), n0(k.clicks), pct(k.ctr), k.conversions?n0(k.conversions):"—"]),
+      "Keywords for this property are generic rather than branded, so they sit under All three.")}
+  </div>
+  ${gap > 0 ? `<p class="note warn">Ad groups account for ${n0(attributed)} of the
+    ${n0(semTot.Impressions)} search impressions in the report. The remaining ${n0(gap)}
+    ran in campaigns the report does not break out by ad group, so they can't be assigned
+    to a property.</p>` : ""}
+  <p class="note">Most keywords are generic apartment searches shared across the account —
+  only a branded term names a property directly, so keyword-level results can't be split
+  three ways.</p>`;
+}
+
+function paintGeo(){
+  const g = D.shared.geo.slice().sort((a,b)=>b.impressions-a.impressions);
+  const fences = D.shared.fences.slice().sort((a,b)=>b.impressions-a.impressions);
+  const zones = D.shared.zones;
+  const max = Math.max(...g.map(r=>r.impressions), 1);
+  $("geoSub").textContent = isAll() ? "Account level — not reported by property" : "Account level";
+  $("geo").innerHTML = `
+    <div class="eyebrow">Cities reached</div>
+    <div style="margin-top:8px">${g.map(r => `
+      <div class="bar-row">
+        <span class="nm">${esc(r.city)}<span class="sub" style="color:var(--dim)"> ${esc(r.state)}</span></span>
+        <span class="track"><i style="width:${Math.max(2,r.impressions/max*100)}%;background:${accent()}"></i></span>
+        <span class="v">${n0(r.impressions)}</span>
+      </div>`).join("")}</div>
+    <div class="cols" style="margin-top:22px">
+      ${tbl("Target fences", ["Fence","Impr.","Clicks"],
+        fences.map(f => [esc(f.name), n0(f.impressions), f.clicks?n0(f.clicks):"—"]))}
+      ${tbl("Conversion zones", ["Property address","Visits"],
+        zones.map(z => [esc(z.name), z.visits?n0(z.visits):"0"]),
+        "No conversion zones reported.")}
+    </div>
+    <p class="note warn">No foot-traffic visits have been recorded yet. Geofencing attribution
+    typically needs several weeks of delivery before visits register, and this campaign has
+    been live since 19 August.</p>
+    <p class="note">Geography is reported for the account as a whole, so these figures cover
+    all three properties regardless of the tab selected.</p>`;
+}
+
+/* ---------- render ---------- */
+function render(){
+  document.documentElement.style.setProperty("--accent", accent());
+  paintTabs();
+  $("railMeta").textContent = D.period;
+  $("footPeriod").textContent = D.period;
+  const p = isAll() ? null : D.properties[state.tab];
+  $("footSite").innerHTML = p ? `<a class="site" href="${p.site}" target="_blank" rel="noopener">${p.site.replace(/^https?:\/\//,"").replace(/\/$/,"")} ↗</a>` : "";
+  $("strip").innerHTML = [
+    `<span>Source: <b>pulseMax report</b></span>`,
+    `<span>Flight: <b>${D.period}</b></span>`,
+    isAll() ? `<span>Showing <b>all three properties</b></span>`
+            : `<span>Showing <b>${esc(p.name)}</b></span>`,
+    `<span style="color:#E5B96B">First three weeks of delivery — read early figures with care.</span>`,
+  ].join("");
+  paintCtx(); paintKPIs(); paintChannels(); paintCreative(); paintSEM(); paintGeo();
+}
+render();
+</script>
+</body></html>
