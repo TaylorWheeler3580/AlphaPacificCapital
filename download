@@ -1,0 +1,26 @@
+# Source decks, Google Ads exports and the Meta lead workbook are client
+# reporting; keep them local.
+source-reports/*.pptx
+source-reports/*.xlsx
+source-reports/prior/
+source-reports/keyword-exports/
+
+# data/model.json carries the parsed call log: caller names, phone numbers and
+# CallRail recording URLs. build.py strips those from every build, but the model
+# itself should not be published.
+data/model.json
+
+# data/leads.json is the Meta lead roster: 143 names, email addresses and phone
+# numbers. build.py inlines it into index.html and holds it out of
+# index-public.html.
+data/leads.json
+
+# index.html is NOT ignored, so the dashboard still commits and GitHub Pages
+# still serves it. It does contain the lead roster. If this repository is or
+# becomes public, commit index-public.html instead and delete index.html from
+# the working tree — see README, "Two builds, and why".
+
+build/
+__pycache__/
+*.pyc
+.DS_Store

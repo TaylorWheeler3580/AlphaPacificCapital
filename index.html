@@ -31,17 +31,59 @@ body{margin:0; background:var(--paper); color:var(--text); font-size:14px; line-
   flex-wrap:wrap; border-top:1px solid #212C38; font-size:11.5px; color:#8794A2}
 .rail-strip b{color:#D6DDE4; font-weight:600}
 
-.tabs{display:flex; gap:2px; border-bottom:1px solid var(--rule); flex-wrap:wrap; margin-top:18px}
+.tabs{display:flex; gap:2px; border-bottom:1px solid #212C38; flex-wrap:wrap; margin-top:18px}
 .tabs button{appearance:none; border:0; background:none; cursor:pointer; font-family:inherit;
-  font-size:13.5px; font-weight:500; color:var(--muted); padding:11px 18px;
+  font-size:13.5px; font-weight:500; color:#8794A2; padding:11px 18px;
   border-bottom:2px solid transparent; margin-bottom:-1px; transition:color .13s,border-color .13s}
-.tabs button:hover{color:var(--text)}
-.tabs button[aria-selected="true"]{color:var(--text); font-weight:600; border-bottom-color:var(--accent)}
+.tabs button:hover{color:#C6D0DA}
+.tabs button[aria-selected="true"]{color:#fff; font-weight:600; border-bottom-color:var(--accent)}
 .tabs button:focus-visible{outline:2px solid var(--accent); outline-offset:-2px}
 .tabs button i{display:inline-block; width:7px; height:7px; border-radius:50%; margin-right:8px;
   vertical-align:0; background:var(--accent)}
 
 #ctx:empty{display:none}
+.periods{display:flex; gap:7px; align-items:center; flex-wrap:wrap; margin-top:16px}
+.periods .plab{font-size:10.5px; font-weight:600; letter-spacing:.13em;
+  text-transform:uppercase; color:var(--dim); margin-right:3px}
+.periods button{appearance:none; font-family:inherit; cursor:pointer; font-size:12.5px;
+  padding:6px 14px; border-radius:999px; border:1px solid var(--rule);
+  background:var(--card); color:var(--muted); transition:.13s}
+.periods button:hover{border-color:var(--dim); color:var(--text)}
+.periods button[aria-pressed="true"]{background:var(--ink); border-color:var(--ink);
+  color:#fff; font-weight:600}
+.periods button:focus-visible{outline:2px solid var(--accent); outline-offset:2px}
+.periods .pspan{font-size:11.5px; color:var(--dim); margin-left:6px}
+
+.flag{margin-top:14px; background:#FDF7EC; border:1px solid #EBD9B6;
+  border-left:3px solid var(--warn); border-radius:4px; padding:12px 16px;
+  font-size:12.5px; line-height:1.55; color:#6C4F17}
+.flag b{color:#4A360F}
+.chip{display:inline-block; font-size:10px; font-weight:600; letter-spacing:.07em;
+  text-transform:uppercase; padding:2px 8px; border-radius:999px;
+  background:var(--rule-soft); color:var(--muted); margin-left:8px}
+.chip.warn{background:#F6EAD3; color:#8A6417}
+.delta{font-size:10.5px; font-weight:600; letter-spacing:.02em}
+.delta.up{color:var(--pos)} .delta.down{color:#C0392B}
+
+.lead-tools{display:flex; justify-content:space-between; align-items:center;
+  gap:14px; flex-wrap:wrap; margin-bottom:10px}
+.reveal{appearance:none; font-family:inherit; font-size:11.5px; cursor:pointer;
+  padding:5px 12px; border-radius:999px; border:1px solid var(--rule);
+  background:var(--card); color:var(--muted)}
+.reveal:hover{border-color:var(--dim); color:var(--text)}
+.reveal[aria-pressed="true"]{background:var(--ink); border-color:var(--ink); color:#fff}
+.masked{color:var(--dim); letter-spacing:.08em}
+.lead-scroll{max-height:520px; overflow:auto; border:1px solid var(--rule-soft);
+  border-radius:3px}
+.lead-scroll .dt{font-size:12px}
+.lead-scroll .dt th{position:sticky; top:0; background:var(--card); z-index:1;
+  padding:8px 10px 7px; border-bottom:1px solid var(--rule)}
+.lead-scroll .dt td{padding:7px 10px}
+.lead-scroll .dt caption{padding:10px 10px 7px}
+/* a contact roster is text, not figures: read it down the left edge */
+.lead-scroll .dt th, .lead-scroll .dt td{text-align:left}
+.lead-scroll .dt td:nth-child(2), .lead-scroll .dt td:nth-child(3){
+  font-family:Archivo,sans-serif; font-size:12.5px}
 .ctx-bar{background:var(--card); border:1px solid var(--rule); border-left:3px solid var(--accent);
   border-radius:4px; margin-top:14px; padding:14px 18px; display:flex; gap:30px;
   align-items:center; flex-wrap:wrap}
@@ -126,7 +168,7 @@ a.site:hover{text-decoration:underline}
   .kpi{padding:8px 0; border-left:0!important}
 }
 @media print{
-  .tabs{display:none!important}
+  .tabs, .periods{display:none!important}
   [data-tabhide]{display:block!important}
   body{background:#fff}
   .panel{break-inside:avoid}
@@ -147,6 +189,8 @@ a.site:hover{text-decoration:underline}
 </header>
 
 <main class="wrap">
+  <div class="periods" id="periods"></div>
+  <div id="flag"></div>
   <div id="ctx"></div>
 
   <section class="panel" id="kpiPanel">
@@ -169,6 +213,11 @@ a.site:hover{text-decoration:underline}
     <div class="panel-b" id="sem"></div>
   </section>
 
+  <section class="panel" id="leadPanel" hidden>
+    <div class="panel-h"><h2>Leads</h2><div class="sub" id="leadSub"></div></div>
+    <div class="panel-b" id="leads"></div>
+  </section>
+
   <section class="panel" id="geoPanel">
     <div class="panel-h"><h2>Geography</h2><div class="sub" id="geoSub"></div></div>
     <div class="panel-b" id="geo"></div>
@@ -181,11 +230,24 @@ a.site:hover{text-decoration:underline}
 </main>
 
 <script>
-const D = {"client":"Alpha Pacific Capital","period":"Aug 19 \u2013 Sep 9, 2026","order":["CAN","ONX","ELY"],"properties":{"CAN":{"key":"CAN","name":"Camino Al Norte","site":"https://caminoalnorteapts.com/","accent":"#C2691D","match":"camino\\s*al\\s*norte","channels":{"Display":{"impressions":9203,"clicks":10,"visits":0,"conversions":0,"engagement":0,"leads":0},"SEM":{"impressions":4333,"clicks":404,"visits":0,"conversions":0,"engagement":0,"leads":0}},"creatives":{"Display sizes":[{"name":"320x50_Camino Al Norte CR31358.gif","impressions":5376,"clicks":4,"ctr":0.07,"size":"320x50"},{"name":"300x600_Camino Al Norte CR31358.gif","impressions":283,"clicks":0,"ctr":0,"size":"300x600"}],"Display":[{"name":"Camino Al Norte CR31358.gif","impressions":9203,"clicks":10,"ctr":0.11,"size":""}]},"adGroups":[{"name":"Camino Al Norte Apts_Townhome rentals","impressions":3006,"clicks":326,"ctr":10.84,"conversions":0},{"name":"Camino Al Norte Apts_Apartment rentals","impressions":1327,"clicks":78,"ctr":5.88,"conversions":0}],"keywords":[],"campaigns":[{"channel":"Display","name":"Camino Al Norte Apts_GFT","impressions":9203,"clicks":10,"ctr":0.11,"visits":0,"conversions":0}]},"ONX":{"key":"ONX","name":"The Onyx","site":"https://theonyxapartments.com/","accent":"#2F6FED","match":"\\bonyx\\b","channels":{"Social":{"impressions":20065,"clicks":449,"visits":0,"conversions":67,"engagement":479,"leads":67},"Display":{"impressions":52382,"clicks":103,"visits":0,"conversions":0,"engagement":0,"leads":0},"SEM":{"impressions":5697,"clicks":306,"visits":0,"conversions":0,"engagement":0,"leads":0}},"creatives":{"Display":[{"name":"The Onyx CR31328.gif","impressions":52382,"clicks":103,"ctr":0.2,"size":""}]},"adGroups":[{"name":"The Onyx Apartments_Luxury Apartment Rentals","impressions":4078,"clicks":206,"ctr":5.05,"conversions":0},{"name":"The Onyx Apartments_Luxury Townhome Rentals","impressions":1619,"clicks":100,"ctr":6.18,"conversions":0}],"keywords":[],"campaigns":[{"channel":"Social","name":"The Onyx Apartments_LeadGen","impressions":20065,"clicks":449,"ctr":2.24,"engagement":479,"leads":67,"visits":0,"conversions":67},{"channel":"Display","name":"The Onyx Apartments_GFT","impressions":52382,"clicks":103,"ctr":0.2,"visits":0,"conversions":0}]},"ELY":{"key":"ELY","name":"Elysian at St. Rose","site":"https://elysianatstrose.com/","accent":"#0E9F6E","match":"elysian|st\\.?\\s*rose","channels":{"Display":{"impressions":11243,"clicks":31,"visits":0,"conversions":0,"engagement":0,"leads":0},"SEM":{"impressions":3410,"clicks":238,"visits":0,"conversions":1,"engagement":0,"leads":0}},"creatives":{"Display sizes":[{"name":"320x50_Elysian At St. Rose CR31360.gif","impressions":7745,"clicks":16,"ctr":0.21,"size":"320x50"},{"name":"640x100_Elysian At St. Rose CR31360.gif","impressions":4,"clicks":1,"ctr":25,"size":"640x100"},{"name":"728x90_Elysian At St. Rose CR31360.gif","impressions":2139,"clicks":11,"ctr":0.51,"size":"728x90"}],"Display":[{"name":"Elysian At St. Rose CR31360.gif","impressions":11243,"clicks":31,"ctr":0.28,"size":""}]},"adGroups":[{"name":"Elysian at St. Rose_Luxury Apartment Rentals","impressions":3410,"clicks":238,"ctr":6.98,"conversions":1}],"keywords":[{"name":"Elysian at St. Rose","impressions":114,"clicks":46,"ctr":40.35,"conversions":1}],"campaigns":[{"channel":"Display","name":"Elysian at St. Rose_GFT","impressions":11243,"clicks":31,"ctr":0.28,"visits":0,"conversions":0}]}},"shared":{"channels":{"Display":{"Impressions":72800,"Clicks":143,"CTR(%)":0.2},"Social":{"Impressions":20100,"Clicks":449,"CTR(%)":2.24,"Engagement":481,"Total Conversions/Leads":0},"SEM":{"Impressions":14300,"Clicks":1100,"CTR(%)":7.78,"Primary Conversions":2,"All Conversions":2}},"geo":[{"city":"Las Vegas","state":"Nevada","impressions":23909,"clicks":62,"visits":0},{"city":"Henderson","state":"Nevada","impressions":2991,"clicks":7,"visits":0},{"city":"Phoenix","state":"Arizona","impressions":2005,"clicks":5,"visits":0},{"city":"Tucson","state":"Arizona","impressions":866,"clicks":4,"visits":0},{"city":"Victoria","state":"Minnesota","impressions":2,"clicks":2,"visits":0}],"zones":[{"name":"Camino al Norte --4970 Camino Al Norte, North Las Vegas, NV 89031","visits":0,"conversions":0},{"name":"The Onyx --5150 Duke Ellington Way, Las Vegas, NV 89119","visits":0,"conversions":0}],"fences":[{"name":"St. Rose Dominican Hospital, Siena Campus -3001 St Rose Pkwy, Henderson, NV 89052","impressions":17,"clicks":0,"visits":0},{"name":"Aliante Golf Club / Sun City Aliante-3100 Elkhorn Rd &-7394 N Aliante Pkwy, North Las Vegas, NV 89084","impressions":1168,"clicks":0,"visits":0},{"name":"Del Frisco's Double Eagle Steakhouse \u2014-3925 Paradise Rd, Las Vegas, NV 89169","impressions":316,"clicks":0,"visits":0},{"name":"Mandalay Bay \u2014-3950 S Las Vegas Blvd, Las Vegas, NV 89119","impressions":12482,"clicks":35,"visits":0},{"name":"Excalibur \u2014-3850 S Las Vegas Blvd, Las Vegas, NV 89109","impressions":28805,"clicks":57,"visits":0}],"calls":[{"date":"08-2026","total":2,"answered":2,"avgDur":"00:01:21"}],"callLog":[{"date":"2026-08-28","source":"Google Ads","name":"REAL ESTATE EVE","number":"+17025239385","duration":"00:01:07","recording":"https://api.callrail.com/v3/a/ACCb1341b95bb3542fca4b85d5646218979/calls/CAL01a0490efc2a75c591b37524a4b6ac16/recording","id":"CAL01a0490efc2a75c591b37524a4b6ac16","answered":true,"summary":"The customer called the leasing office believing they were returning a call from the property, but the agent clarified that the office had not initiated any outbound calls. The agent explained that this is a leasing office for apartment rentals. The call appears to be a misunderstanding, with the customer contacting the wrong party or confusing the purpose of the incoming call.","sec":67},{"date":"2026-08-25","source":"Google Ads","name":"LAS VEGAS    NV","number":"+17023792751","duration":"00:01:36","recording":"https://api.callrail.com/v3/a/ACCb1341b95bb3542fca4b85d5646218979/calls/CAL01a039b1696976408c732b4f1425247e/recording","id":"CAL01a039b1696976408c732b4f1425247e","answered":true,"summary":"Customer Sa. called to inquire about the scheduled time for unit inspections at the community. Agent Karina Helmi confirmed that inspections begin at 9am across multiple buildings, but clarified that the inspection team was already on property at 8am knocking on doors to notify residents. The customer's question was resolved after providing their apartment number (1078) and learning that the early knock on their door at 8 o'clock was from the inspection team giving advance notice.","sec":96}],"callStatus":{"CAL01a0490efc2a75c591b37524a4b6ac16":{"answered":true,"summary":"The customer called the leasing office believing they were returning a call from the property, but the agent clarified that the office had not initiated any outbound calls. The agent explained that this is a leasing office for apartment rentals. The call appears to be a misunderstanding, with the customer contacting the wrong party or confusing the purpose of the incoming call."},"CAL01a039b1696976408c732b4f1425247e":{"answered":true,"summary":"Customer Sa. called to inquire about the scheduled time for unit inspections at the community. Agent Karina Helmi confirmed that inspections begin at 9am across multiple buildings, but clarified that the inspection team was already on property at 8am knocking on doors to notify residents. The customer's question was resolved after providing their apartment number (1078) and learning that the early knock on their door at 8 o'clock was from the inspection team giving advance notice."}},"keywords":[{"name":"rentals in north las vegas","impressions":2319,"clicks":214,"ctr":9.23,"conversions":0},{"name":"luxury apartment homes","impressions":2674,"clicks":194,"ctr":7.26,"conversions":1},{"name":"townhome options","impressions":1601,"clicks":99,"ctr":6.18,"conversions":0},{"name":"las vegas residences","impressions":1798,"clicks":88,"ctr":4.89,"conversions":0},{"name":"north las vegas townhomes","impressions":328,"clicks":44,"ctr":13.41,"conversions":0},{"name":"luxury living las vegas","impressions":871,"clicks":43,"ctr":4.94,"conversions":0},{"name":"pet friendly rentals","impressions":319,"clicks":40,"ctr":12.54,"conversions":0}],"devices":[{"name":"Mobile","impressions":63980,"clicks":122},{"name":"Tablets","impressions":5544,"clicks":19},{"name":"Desktops and Laptops","impressions":3304,"clicks":3}],"platforms":[],"period":"Aug 19 \u2013 Sep 9, 2026","metaMonthly":[{"date":"09-2026","impressions":9329,"clicks":221,"ctr":2.37,"leads":38},{"date":"08-2026","impressions":10736,"clicks":228,"ctr":2.12,"leads":29}],"metaPlatform":[{"name":"facebook","impressions":11961,"clicks":290,"ctr":2.42,"engagement":299,"leads":50},{"name":"instagram","impressions":8104,"clicks":159,"ctr":1.96,"engagement":180,"leads":17}],"metaReach":{"impressions":21645,"reach":8697,"frequency":2.49},"metaGender":[{"name":"female","impressions":11341,"clicks":257,"ctr":2.27,"leads":36},{"name":"male","impressions":10177,"clicks":212,"ctr":2.08,"leads":33},{"name":"unknown","impressions":120,"clicks":3,"ctr":2.5,"leads":2}],"metaGeo":[{"name":"Las Vegas, NV","impressions":20042,"clicks":449},{"name":"San Diego, CA","impressions":2,"clicks":0},{"name":"Denver-Aurora, CO","impressions":2,"clicks":0},{"name":"Los Angeles, CA","impressions":6,"clicks":0},{"name":"Bakersfield, CA","impressions":4,"clicks":0}],"metaPost":{"engagement":479,"likes":2,"shares":4,"reactions":23,"clicks":449},"semDevices":[{"name":"MOBILE","impressions":13870,"clicks":1062,"ctr":7.66},{"name":"DESKTOP","impressions":1107,"clicks":100,"ctr":9.03},{"name":"TABLET","impressions":220,"clicks":13,"ctr":5.91}],"semGeo":[{"name":"Las Vegas Valley","state":"Nevada","impressions":13519,"clicks":1027},{"name":"North Las Vegas","state":"Nevada","impressions":571,"clicks":50},{"name":"Enterprise","state":"Nevada","impressions":281,"clicks":25},{"name":"Paradise","state":"Nevada","impressions":221,"clicks":19},{"name":"Las Vegas","state":"Nevada","impressions":238,"clicks":18}]}};
+const D = {"client":"Alpha Pacific Capital","period":"Aug 19 \u2013 Sep 29, 2026","order":["CAN","ONX","ELY"],"properties":{"CAN":{"key":"CAN","name":"Camino Al Norte","site":"https://caminoalnorteapts.com/","accent":"#C2691D","match":"camino\\s*al\\s*norte","channels":{"Display":{"impressions":23557,"clicks":27,"visits":2,"conversions":2,"engagement":0,"leads":0},"SEM":{"impressions":8111,"clicks":834,"visits":0,"conversions":2,"engagement":0,"leads":0}},"creatives":{"Display sizes":[{"name":"300x250_Camino Al Norte CR31358.gif","impressions":5845,"clicks":9,"ctr":0.15,"size":"300x250"},{"name":"320x50_Camino Al Norte CR31358.gif","impressions":15151,"clicks":13,"ctr":0.09,"size":"320x50"},{"name":"160x600_Camino Al Norte CR31358.gif","impressions":167,"clicks":1,"ctr":0.6,"size":"160x600"}],"Display":[{"name":"Camino Al Norte CR31358.gif","impressions":23557,"clicks":27,"ctr":0.11,"size":""}]},"adGroups":[{"name":"Camino Al Norte Apts_Townhome rentals","impressions":5178,"clicks":545,"ctr":10.53,"conversions":0},{"name":"Camino Al Norte Apts_Apartment rentals","impressions":2534,"clicks":211,"ctr":8.33,"conversions":1}],"keywords":[{"name":"camino al norte townhomes","impressions":224,"clicks":73,"ctr":32.59,"conversions":0}],"campaigns":[{"channel":"Display","name":"Camino Al Norte Apts_GFT","impressions":23557,"clicks":27,"ctr":0.11,"visits":2,"conversions":2},{"channel":"SEM","name":"Camino Al Norte Apts_SEM-SEARCH","impressions":8111,"clicks":834,"ctr":10.28,"visits":0,"conversions":2}]},"ONX":{"key":"ONX","name":"The Onyx","site":"https://theonyxapartments.com/","accent":"#2F6FED","match":"\\bonyx\\b","channels":{"Social":{"impressions":44028,"clicks":1031,"visits":0,"conversions":153,"engagement":1107,"leads":153},"Display":{"impressions":110211,"clicks":214,"visits":3,"conversions":3,"engagement":0,"leads":0},"SEM":{"impressions":14081,"clicks":956,"visits":0,"conversions":3,"engagement":0,"leads":0}},"creatives":{"Display sizes":[{"name":"320x50_The Onyx CR31328.gif","impressions":83297,"clicks":156,"ctr":0.19,"size":"320x50"}],"Display":[{"name":"The Onyx CR31328.gif","impressions":110211,"clicks":214,"ctr":0.19,"size":""}]},"adGroups":[{"name":"The Onyx Apartments_Luxury Apartment Rentals","impressions":9565,"clicks":542,"ctr":5.67,"conversions":2},{"name":"The Onyx Apartments_Luxury Townhome Rentals","impressions":3638,"clicks":288,"ctr":7.92,"conversions":0}],"keywords":[],"campaigns":[{"channel":"Social","name":"The Onyx Apartments_LeadGen","impressions":44028,"clicks":1031,"ctr":2.34,"engagement":1107,"leads":153,"visits":0,"conversions":153},{"channel":"Display","name":"The Onyx Apartments_GFT","impressions":110211,"clicks":214,"ctr":0.19,"visits":3,"conversions":3},{"channel":"SEM","name":"The Onyx Apartments_SEM-SEARCH","impressions":14081,"clicks":956,"ctr":6.79,"visits":0,"conversions":3}]},"ELY":{"key":"ELY","name":"Elysian at St. Rose","site":"https://elysianatstrose.com/","accent":"#0E9F6E","match":"elysian|st\\.?\\s*rose","channels":{"Display":{"impressions":23652,"clicks":55,"visits":1,"conversions":1,"engagement":0,"leads":0},"SEM":{"impressions":6854,"clicks":596,"visits":0,"conversions":5,"engagement":0,"leads":0}},"creatives":{"Display sizes":[{"name":"320x50_Elysian At St. Rose CR31360.gif","impressions":16439,"clicks":31,"ctr":0.19,"size":"320x50"}],"Display":[{"name":"Elysian At St. Rose CR31360.gif","impressions":23652,"clicks":55,"ctr":0.23,"size":""}]},"adGroups":[{"name":"Elysian at St. Rose_Luxury Apartment Rentals","impressions":6129,"clicks":424,"ctr":6.92,"conversions":1}],"keywords":[{"name":"Elysian at St. Rose","impressions":292,"clicks":115,"ctr":39.38,"conversions":4}],"campaigns":[{"channel":"Display","name":"Elysian at St. Rose_GFT","impressions":23652,"clicks":55,"ctr":0.23,"visits":1,"conversions":1},{"channel":"SEM","name":"Elysian at St. Rose_SEM-SEARCH","impressions":6854,"clicks":596,"ctr":8.7,"visits":0,"conversions":5}]}},"shared":{"channels":{"Display":{"Impressions":157400,"Clicks":295,"CTR(%)":0.19},"Social":{"Impressions":44000,"Clicks":1000,"CTR(%)":2.34,"Engagement":1100,"Total Conversions/Leads":0},"SEM":{"Impressions":29000,"Clicks":2400,"CTR(%)":8.21,"Primary Conversions":10,"All Conversions":10}},"geo":[{"city":"Las Vegas","state":"Nevada","impressions":50121,"clicks":105,"visits":3},{"city":"Henderson","state":"Nevada","impressions":6502,"clicks":19,"visits":0},{"city":"Phoenix","state":"Arizona","impressions":4285,"clicks":9,"visits":0},{"city":"North Las Vegas","state":"Nevada","impressions":9596,"clicks":8,"visits":1},{"city":"Tucson","state":"Arizona","impressions":2290,"clicks":8,"visits":0}],"zones":[{"name":"The Onyx --5150 Duke Ellington Way, Las Vegas, NV 89119","visits":3,"conversions":3},{"name":"Camino al Norte --4970 Camino Al Norte, North Las Vegas, NV 89031","visits":2,"conversions":2},{"name":"Elysian at St. Rose \u2014 11425 Bermuda Rd, Henderson, NV 89052","visits":1,"conversions":1}],"fences":[{"name":"Luxor \u2014-3900 S Las Vegas Blvd, Las Vegas, NV 89119","impressions":2997,"clicks":5,"visits":2},{"name":"5515 Camino Al Norte, North Las Vegas, NV 89031","impressions":9748,"clicks":11,"visits":2},{"name":"West Henderson Hospital-1155 Raiders Way, Henderson, NV 89052","impressions":23547,"clicks":55,"visits":1},{"name":"Excalibur \u2014-3850 S Las Vegas Blvd, Las Vegas, NV 89109","impressions":64134,"clicks":124,"visits":1},{"name":"Aliante Golf Club / Sun City Aliante-3100 Elkhorn Rd &-7394 N Aliante Pkwy, North Las Vegas, NV 89084","impressions":3805,"clicks":2,"visits":0}],"calls":[{"date":"09-2026","total":9,"answered":9,"avgDur":"00:01:53"},{"date":"08-2026","total":2,"answered":2,"avgDur":"00:01:21"}],"keywords":[{"name":"luxury apartment homes","impressions":5079,"clicks":360,"ctr":7.09,"conversions":1},{"name":"rentals in north las vegas","impressions":3936,"clicks":333,"ctr":8.46,"conversions":0},{"name":"townhome options","impressions":3616,"clicks":285,"ctr":7.88,"conversions":0},{"name":"las vegas residences","impressions":4932,"clicks":250,"ctr":5.07,"conversions":0},{"name":"townhomes apartments","impressions":1322,"clicks":113,"ctr":8.55,"conversions":1},{"name":"luxury living las vegas","impressions":1573,"clicks":101,"ctr":6.42,"conversions":0}],"devices":[{"name":"Mobile","impressions":137495,"clicks":245},{"name":"Tablets","impressions":12683,"clicks":45},{"name":"Desktops and Laptops","impressions":7243,"clicks":6}],"platforms":[],"period":"Aug 19 \u2013 Sep 29, 2026","monthly":{"Calls":{"09-2026":{"calls":9,"first":5,"answered":9,"avgDur":"00:01:53"},"08-2026":{"calls":2,"first":2,"answered":2,"avgDur":"00:01:21"}},"Social":{"09-2026":{"impressions":33292,"clicks":803,"ctr":2.41,"engagement":863,"leads":124,"conversions":124},"08-2026":{"impressions":10736,"clicks":228,"ctr":2.12,"engagement":244,"leads":29,"conversions":29}},"Display":{"09-2026":{"impressions":116509,"clicks":209,"ctr":0.18,"visits":6,"conversions":6},"08-2026":{"impressions":40911,"clicks":87,"ctr":0.21,"visits":0,"conversions":0}},"SEM":{"09-2026":{"impressions":20120,"clicks":1711,"ctr":8.5,"conversions":8},"08-2026":{"impressions":8926,"clicks":675,"ctr":7.56,"conversions":2}}},"zips":[{"state":"Nevada","zip":"89109","impressions":8072,"clicks":12,"ctr":0.15,"visits":1},{"state":"Nevada","zip":"89121","impressions":4181,"clicks":12,"ctr":0.29,"visits":2},{"state":"Nevada","zip":"89052","impressions":2336,"clicks":9,"ctr":0.39,"visits":0},{"state":"Nevada","zip":"89110","impressions":2946,"clicks":8,"ctr":0.27,"visits":0},{"state":"Nevada","zip":"89119","impressions":3018,"clicks":8,"ctr":0.27,"visits":0}],"semConv":[{"name":"First Time Phone Call","conversions":6},{"name":"Calls from ads","conversions":5},{"name":"Repeat Phone Call","conversions":4}],"metaAdSets":[{"name":"Primary Interest","impressions":35011,"clicks":768,"ctr":2.19,"leads":124},{"name":"RT","impressions":9017,"clicks":263,"ctr":2.92,"leads":29}],"metaWeekly":[{"week":"Aug 16","impressions":0,"clicks":0,"ctr":0,"leads":0},{"week":"Aug 23","impressions":8188,"clicks":171,"ctr":2.09,"leads":20},{"week":"Aug 30","impressions":7724,"clicks":200,"ctr":2.59,"leads":33},{"week":"Sep 06","impressions":9303,"clicks":168,"ctr":1.81,"leads":27},{"week":"Sep 13","impressions":8247,"clicks":206,"ctr":2.5,"leads":31}],"semWeekly":[{"name":"Aug 16","conversions":0},{"name":"Aug 23","conversions":2},{"name":"Aug 30","conversions":0},{"name":"Sep 06","conversions":1},{"name":"Sep 13","conversions":3},{"name":"Sep 20","conversions":2},{"name":"Sep 27","conversions":2}],"metaMonthly":[{"date":"09-2026","impressions":33292,"clicks":803,"ctr":2.41,"leads":124},{"date":"08-2026","impressions":10736,"clicks":228,"ctr":2.12,"leads":29}],"metaPlatform":[{"name":"facebook","impressions":24978,"clicks":649,"ctr":2.6,"engagement":669,"leads":105},{"name":"instagram","impressions":19050,"clicks":382,"ctr":2.01,"engagement":438,"leads":48}],"metaReach":{"impressions":44033,"reach":13562,"frequency":3.25},"metaGender":[{"name":"female","impressions":23085,"clicks":590,"ctr":2.56,"leads":81},{"name":"male","impressions":20661,"clicks":433,"ctr":2.1,"leads":70},{"name":"unknown","impressions":282,"clicks":8,"ctr":2.84,"leads":2}],"metaGeo":[{"name":"Las Vegas, NV","impressions":43973,"clicks":1031},{"name":"Los Angeles, CA","impressions":19,"clicks":0},{"name":"Denver-Aurora, CO","impressions":2,"clicks":0},{"name":"Phoenix, AZ","impressions":2,"clicks":0},{"name":"Bakersfield, CA","impressions":4,"clicks":0}],"metaPost":{"engagement":1107,"likes":3,"shares":9,"reactions":48,"clicks":1031},"semDevices":[{"name":"MOBILE","impressions":26784,"clicks":2197,"ctr":8.2},{"name":"DESKTOP","impressions":1891,"clicks":169,"ctr":8.94},{"name":"TABLET","impressions":371,"clicks":20,"ctr":5.39}],"semGeo":[{"name":"Las Vegas Valley","state":"Nevada","impressions":26121,"clicks":2110},{"name":"North Las Vegas","state":"Nevada","impressions":1000,"clicks":90},{"name":"Enterprise","state":"Nevada","impressions":475,"clicks":50},{"name":"Paradise","state":"Nevada","impressions":380,"clicks":35},{"name":"Henderson","state":"Nevada","impressions":330,"clicks":33}]}};
 const KW = {"CAN":{"rows":[{"kw":"rentals in north las vegas","match":"Phrase","group":"Townhome rentals","impr":2522,"clicks":234,"ctr":9.28,"conv":0,"cost":383.88,"cpc":1.64,"qs":4,"serving":"Eligible","why":""},{"kw":"townhomes apartments","match":"Phrase","group":"Apartment rentals","impr":760,"clicks":45,"ctr":5.92,"conv":0,"cost":77.26,"cpc":1.72,"qs":5,"serving":"Eligible","why":""},{"kw":"north las vegas townhomes","match":"Phrase","group":"Townhome rentals","impr":349,"clicks":46,"ctr":13.18,"conv":0,"cost":77.75,"cpc":1.69,"qs":7,"serving":"Eligible","why":""},{"kw":"2 bedrooms for rent","match":"Phrase","group":"Apartment rentals","impr":321,"clicks":28,"ctr":8.72,"conv":0,"cost":49.73,"cpc":1.78,"qs":0,"serving":"Eligible","why":""},{"kw":"townhomes for rent north las vegas","match":"Phrase","group":"Townhome rentals","impr":177,"clicks":23,"ctr":12.99,"conv":0,"cost":39.16,"cpc":1.7,"qs":7,"serving":"Eligible","why":""},{"kw":"1 bed room apartment","match":"Phrase","group":"Apartment rentals","impr":161,"clicks":7,"ctr":4.35,"conv":0,"cost":12.35,"cpc":1.76,"qs":0,"serving":"Eligible","why":""},{"kw":"cheap apartments in north las vegas","match":"Phrase","group":"Townhome rentals","impr":102,"clicks":16,"ctr":15.69,"conv":0,"cost":26.51,"cpc":1.66,"qs":6,"serving":"Eligible","why":""},{"kw":"camino al norte townhomes apartments","match":"Phrase","group":"Townhome rentals","impr":96,"clicks":32,"ctr":33.33,"conv":0,"cost":38.16,"cpc":1.19,"qs":10,"serving":"Eligible","why":""},{"kw":"upscale apartments for rent","match":"Phrase","group":"Apartment rentals","impr":95,"clicks":3,"ctr":3.16,"conv":0,"cost":4.91,"cpc":1.64,"qs":0,"serving":"Eligible","why":""},{"kw":"pet friendly residences","match":"Phrase","group":"Pet friendly rentals","impr":72,"clicks":9,"ctr":12.5,"conv":0,"cost":14.77,"cpc":1.64,"qs":0,"serving":"Eligible","why":""},{"kw":"Camino Al Norte Apartments","match":"Phrase","group":"Branded","impr":71,"clicks":18,"ctr":25.35,"conv":0,"cost":21.11,"cpc":1.17,"qs":9,"serving":"Eligible","why":""},{"kw":"pet friendly apartments for rent","match":"Phrase","group":"Pet friendly rentals","impr":50,"clicks":9,"ctr":18.0,"conv":0,"cost":17.63,"cpc":1.96,"qs":0,"serving":"Eligible","why":""},{"kw":"high end apartment rentals","match":"Phrase","group":"Apartment rentals","impr":34,"clicks":2,"ctr":5.88,"conv":0,"cost":4.01,"cpc":2.01,"qs":0,"serving":"Eligible","why":""},{"kw":"luxury apartment homes","match":"Phrase","group":"Apartment rentals","impr":30,"clicks":3,"ctr":10.0,"conv":0,"cost":5.36,"cpc":1.79,"qs":0,"serving":"Eligible","why":""},{"kw":"luxury townhome living","match":"Phrase","group":"Townhome rentals","impr":26,"clicks":5,"ctr":19.23,"conv":0,"cost":8.46,"cpc":1.69,"qs":0,"serving":"Eligible","why":""},{"kw":"3 bedroom apartments","match":"Phrase","group":"Apartment rentals","impr":22,"clicks":1,"ctr":4.55,"conv":0,"cost":1.97,"cpc":1.97,"qs":3,"serving":"Eligible","why":""},{"kw":"luxury apartment rentals","match":"Phrase","group":"Apartment rentals","impr":7,"clicks":0,"ctr":0.0,"conv":0,"cost":0,"cpc":0,"qs":0,"serving":"Eligible","why":""},{"kw":"2 bed apartments near me","match":"Phrase","group":"Apartment rentals","impr":7,"clicks":1,"ctr":14.29,"conv":0,"cost":2.41,"cpc":2.41,"qs":0,"serving":"Eligible","why":""},{"kw":"three bedroom apartments for rent","match":"Phrase","group":"Apartment rentals","impr":5,"clicks":0,"ctr":0.0,"conv":0,"cost":0,"cpc":0,"qs":0,"serving":"Eligible","why":""},{"kw":"4 bed apartments","match":"Phrase","group":"Apartment rentals","impr":3,"clicks":0,"ctr":0.0,"conv":0,"cost":0,"cpc":0,"qs":0,"serving":"Eligible","why":""},{"kw":"pet friendly townhomes for rent","match":"Phrase","group":"Pet friendly rentals","impr":2,"clicks":1,"ctr":50.0,"conv":0,"cost":1.83,"cpc":1.83,"qs":0,"serving":"Eligible","why":""},{"kw":"pet friendly apartment homes","match":"Phrase","group":"Pet friendly rentals","impr":1,"clicks":0,"ctr":0.0,"conv":0,"cost":0,"cpc":0,"qs":0,"serving":"Eligible","why":""},{"kw":"luxury apartments for rent","match":"Phrase","group":"Apartment rentals","impr":1,"clicks":0,"ctr":0.0,"conv":0,"cost":0,"cpc":0,"qs":0,"serving":"Eligible","why":""},{"kw":"one bed apartment for rent","match":"Phrase","group":"Apartment rentals","impr":1,"clicks":0,"ctr":0.0,"conv":0,"cost":0,"cpc":0,"qs":0,"serving":"Eligible","why":""}],"idle":18,"rarely":7,"totals":{"impr":4915,"clicks":483,"conv":0,"cost":787.26},"groups":{"Townhome rentals":{"impr":3272,"clicks":356,"conv":0,"cost":573.92,"n":6},"Apartment rentals":{"impr":1447,"clicks":90,"conv":0,"cost":158.0,"n":13},"Pet friendly rentals":{"impr":125,"clicks":19,"conv":0,"cost":34.23,"n":4},"Branded":{"impr":71,"clicks":18,"conv":0,"cost":21.11,"n":1}}},"ELY":{"rows":[{"kw":"luxury apartment homes","match":"Phrase","group":"Luxury Apartment Rentals","impr":2998,"clicks":211,"ctr":7.04,"conv":1,"cost":522.28,"cpc":2.48,"qs":0,"serving":"Eligible","why":""},{"kw":"upscale apartment living","match":"Phrase","group":"Luxury Apartment Rentals","impr":339,"clicks":17,"ctr":5.01,"conv":0,"cost":40.8,"cpc":2.4,"qs":0,"serving":"Eligible","why":""},{"kw":"Elysian at St. Rose","match":"Phrase","group":"Branded","impr":140,"clicks":57,"ctr":40.71,"conv":1,"cost":83.31,"cpc":1.46,"qs":10,"serving":"Eligible","why":""},{"kw":"luxury living apartments","match":"Phrase","group":"Luxury Apartment Rentals","impr":125,"clicks":13,"ctr":10.4,"conv":0,"cost":35.18,"cpc":2.71,"qs":0,"serving":"Eligible","why":""},{"kw":"luxury apartment living","match":"Phrase","group":"Luxury Apartment Rentals","impr":122,"clicks":9,"ctr":7.38,"conv":0,"cost":32.46,"cpc":3.61,"qs":0,"serving":"Eligible","why":""},{"kw":"luxury apartment community","match":"Phrase","group":"Luxury Apartment Rentals","impr":110,"clicks":8,"ctr":7.27,"conv":0,"cost":21.88,"cpc":2.74,"qs":0,"serving":"Eligible","why":""},{"kw":"premium apartment living","match":"Phrase","group":"Luxury Apartment Rentals","impr":77,"clicks":2,"ctr":2.6,"conv":0,"cost":4.88,"cpc":2.44,"qs":0,"serving":"Eligible","why":""},{"kw":"pet friendly apartment homes","match":"Phrase","group":"Pet Friendly Rentals","impr":65,"clicks":6,"ctr":9.23,"conv":0,"cost":13.28,"cpc":2.21,"qs":0,"serving":"Eligible","why":""},{"kw":"exclusive luxury apartments","match":"Phrase","group":"Luxury Apartment Rentals","impr":34,"clicks":1,"ctr":2.94,"conv":0,"cost":5.46,"cpc":5.46,"qs":0,"serving":"Eligible","why":""},{"kw":"pet friendly townhomes for rent","match":"Phrase","group":"Pet Friendly Rentals","impr":26,"clicks":4,"ctr":15.38,"conv":0,"cost":9.2,"cpc":2.3,"qs":0,"serving":"Eligible","why":""},{"kw":"pet friendly apartment amenities","match":"Phrase","group":"Pet Friendly Rentals","impr":12,"clicks":1,"ctr":8.33,"conv":0,"cost":3.03,"cpc":3.03,"qs":0,"serving":"Eligible","why":""},{"kw":"pet friendly apartments for rent","match":"Phrase","group":"Pet Friendly Rentals","impr":12,"clicks":1,"ctr":8.33,"conv":0,"cost":5.04,"cpc":5.04,"qs":0,"serving":"Eligible","why":""},{"kw":"dog friendly apartment living","match":"Phrase","group":"Pet Friendly Rentals","impr":10,"clicks":1,"ctr":10.0,"conv":0,"cost":2.3,"cpc":2.3,"qs":0,"serving":"Eligible","why":""},{"kw":"pet friendly residences","match":"Phrase","group":"Pet Friendly Rentals","impr":8,"clicks":1,"ctr":12.5,"conv":0,"cost":2.21,"cpc":2.21,"qs":0,"serving":"Eligible","why":""},{"kw":"luxury apartment residences","match":"Phrase","group":"Luxury Apartment Rentals","impr":8,"clicks":0,"ctr":0.0,"conv":0,"cost":0,"cpc":0,"qs":0,"serving":"Eligible","why":""},{"kw":"pet friendly rental living","match":"Phrase","group":"Pet Friendly Rentals","impr":7,"clicks":1,"ctr":14.29,"conv":0,"cost":2.34,"cpc":2.34,"qs":0,"serving":"Eligible","why":""},{"kw":"luxury apartment lifestyle","match":"Phrase","group":"Luxury Apartment Rentals","impr":7,"clicks":1,"ctr":14.29,"conv":0,"cost":2.27,"cpc":2.27,"qs":0,"serving":"Eligible","why":""},{"kw":"luxury living apartments for rent","match":"Phrase","group":"Luxury Apartment Rentals","impr":6,"clicks":0,"ctr":0.0,"conv":0,"cost":0,"cpc":0,"qs":0,"serving":"Eligible","why":""},{"kw":"pet friendly apartment living","match":"Phrase","group":"Pet Friendly Rentals","impr":3,"clicks":1,"ctr":33.33,"conv":0,"cost":5.64,"cpc":5.64,"qs":0,"serving":"Eligible","why":""},{"kw":"luxury townhome living","match":"Phrase","group":"Luxury Townhome Rentals","impr":1,"clicks":0,"ctr":0.0,"conv":0,"cost":0,"cpc":0,"qs":0,"serving":"Eligible","why":""}],"idle":26,"rarely":13,"totals":{"impr":4110,"clicks":335,"conv":2,"cost":791.56},"groups":{"Luxury Apartment Rentals":{"impr":3826,"clicks":262,"conv":1,"cost":665.21,"n":10},"Branded":{"impr":140,"clicks":57,"conv":1,"cost":83.31,"n":1},"Pet Friendly Rentals":{"impr":143,"clicks":16,"conv":0,"cost":43.04,"n":8},"Luxury Townhome Rentals":{"impr":1,"clicks":0,"conv":0,"cost":0,"n":1}}},"ONX":{"rows":[{"kw":"las vegas residences","match":"Phrase","group":"Luxury Apartment Rentals","impr":2069,"clicks":103,"ctr":4.98,"conv":0,"cost":181.04,"cpc":1.76,"qs":0,"serving":"Eligible","why":""},{"kw":"townhome options","match":"Phrase","group":"Luxury Townhome Rentals","impr":1793,"clicks":111,"ctr":6.19,"conv":0,"cost":199.61,"cpc":1.8,"qs":0,"serving":"Eligible","why":""},{"kw":"luxury living las vegas","match":"Phrase","group":"Luxury Apartment Rentals","impr":952,"clicks":50,"ctr":5.25,"conv":0,"cost":97.69,"cpc":1.95,"qs":0,"serving":"Eligible","why":""},{"kw":"las vegas luxury rentals","match":"Phrase","group":"Luxury Apartment Rentals","impr":409,"clicks":21,"ctr":5.13,"conv":0,"cost":46.97,"cpc":2.24,"qs":0,"serving":"Eligible","why":""},{"kw":"premium luxury apartments","match":"Phrase","group":"Luxury Apartment Rentals","impr":357,"clicks":19,"ctr":5.32,"conv":0,"cost":35.29,"cpc":1.86,"qs":0,"serving":"Eligible","why":""},{"kw":"pet friendly rentals","match":"Phrase","group":"Pet-Friendly Apartments","impr":353,"clicks":44,"ctr":12.46,"conv":0,"cost":81.25,"cpc":1.85,"qs":0,"serving":"Eligible","why":""},{"kw":"upscale apartments for rent","match":"Phrase","group":"Luxury Apartment Rentals","impr":281,"clicks":17,"ctr":6.05,"conv":0,"cost":29.15,"cpc":1.71,"qs":0,"serving":"Eligible","why":""},{"kw":"las vegas rentals near strip","match":"Phrase","group":"Luxury Apartment Rentals","impr":247,"clicks":7,"ctr":2.83,"conv":0,"cost":12.09,"cpc":1.73,"qs":0,"serving":"Eligible","why":""},{"kw":"The Onyx Apartments","match":"Phrase","group":"Branded","impr":106,"clicks":24,"ctr":22.64,"conv":0,"cost":35.61,"cpc":1.48,"qs":10,"serving":"Eligible","why":""},{"kw":"rentals near las vegas strip","match":"Phrase","group":"Luxury Apartment Rentals","impr":88,"clicks":10,"ctr":11.36,"conv":0,"cost":23.51,"cpc":2.35,"qs":0,"serving":"Eligible","why":""},{"kw":"luxury rentals las vegas","match":"Phrase","group":"Luxury Apartment Rentals","impr":46,"clicks":2,"ctr":4.35,"conv":0,"cost":6.14,"cpc":3.07,"qs":1,"serving":"Limited","why":"low quality"},{"kw":"luxury apartment rentals","match":"Phrase","group":"Luxury Apartment Rentals","impr":41,"clicks":2,"ctr":4.88,"conv":0,"cost":4.29,"cpc":2.15,"qs":0,"serving":"Eligible","why":""},{"kw":"pet friendly apartments Las Vegas","match":"Phrase","group":"Pet-Friendly Apartments","impr":37,"clicks":3,"ctr":8.11,"conv":0,"cost":8.48,"cpc":2.83,"qs":4,"serving":"Eligible","why":""},{"kw":"high-end apartment rentals","match":"Phrase","group":"Luxury Apartment Rentals","impr":34,"clicks":1,"ctr":2.94,"conv":0,"cost":1.79,"cpc":1.79,"qs":0,"serving":"Eligible","why":""},{"kw":"dog friendly rentals","match":"Phrase","group":"Pet-Friendly Apartments","impr":30,"clicks":1,"ctr":3.33,"conv":0,"cost":3.17,"cpc":3.17,"qs":0,"serving":"Eligible","why":""},{"kw":"onyx las vegas","match":"Phrase","group":"Luxury Apartment Rentals","impr":14,"clicks":1,"ctr":7.14,"conv":0,"cost":1.61,"cpc":1.61,"qs":8,"serving":"Eligible","why":""},{"kw":"Luxury Apartment Rentals","match":"Phrase","group":"Luxury Apartment Rentals","impr":14,"clicks":1,"ctr":7.14,"conv":0,"cost":1.68,"cpc":1.68,"qs":0,"serving":"Eligible","why":""},{"kw":"cat friendly apartments Las Vegas","match":"Phrase","group":"Pet-Friendly Apartments","impr":13,"clicks":3,"ctr":23.08,"conv":0,"cost":8.54,"cpc":2.85,"qs":0,"serving":"Eligible","why":""},{"kw":"upscale townhomes for rent","match":"Phrase","group":"Luxury Townhome Rentals","impr":8,"clicks":1,"ctr":12.5,"conv":0,"cost":2.41,"cpc":2.41,"qs":0,"serving":"Eligible","why":""},{"kw":"townhome floor plans","match":"Phrase","group":"Luxury Townhome Rentals","impr":5,"clicks":0,"ctr":0.0,"conv":0,"cost":0,"cpc":0,"qs":0,"serving":"Eligible","why":""},{"kw":"Pet Friendly Apartments","match":"Phrase","group":"Pet-Friendly Apartments","impr":4,"clicks":1,"ctr":25.0,"conv":0,"cost":1.86,"cpc":1.86,"qs":6,"serving":"Eligible","why":""},{"kw":"pet friendly townhomes Las Vegas","match":"Phrase","group":"Pet-Friendly Apartments","impr":2,"clicks":1,"ctr":50.0,"conv":0,"cost":1.69,"cpc":1.69,"qs":0,"serving":"Eligible","why":""},{"kw":"luxury townhome rentals","match":"Phrase","group":"Luxury Townhome Rentals","impr":2,"clicks":0,"ctr":0.0,"conv":0,"cost":0,"cpc":0,"qs":0,"serving":"Eligible","why":""},{"kw":"townhome tour","match":"Phrase","group":"Luxury Townhome Rentals","impr":2,"clicks":0,"ctr":0.0,"conv":0,"cost":0,"cpc":0,"qs":0,"serving":"Eligible","why":""},{"kw":"pet friendly rentals Las Vegas","match":"Phrase","group":"Pet-Friendly Apartments","impr":1,"clicks":0,"ctr":0.0,"conv":0,"cost":0,"cpc":0,"qs":0,"serving":"Eligible","why":""},{"kw":"luxury townhomes for rent","match":"Phrase","group":"Luxury Townhome Rentals","impr":1,"clicks":0,"ctr":0.0,"conv":0,"cost":0,"cpc":0,"qs":5,"serving":"Eligible","why":""},{"kw":"luxury apartments for rent","match":"Phrase","group":"Luxury Apartment Rentals","impr":1,"clicks":0,"ctr":0.0,"conv":0,"cost":0,"cpc":0,"qs":5,"serving":"Eligible","why":""}],"idle":26,"rarely":14,"totals":{"impr":6910,"clicks":423,"conv":0,"cost":783.87},"groups":{"Luxury Apartment Rentals":{"impr":4553,"clicks":234,"conv":0,"cost":441.25,"n":13},"Luxury Townhome Rentals":{"impr":1811,"clicks":112,"conv":0,"cost":202.02,"n":6},"Pet-Friendly Apartments":{"impr":440,"clicks":53,"conv":0,"cost":104.99,"n":7},"Branded":{"impr":106,"clicks":24,"conv":0,"cost":35.61,"n":1}}}};
+const LEADS = {"ONX":{"rows":[{"m":"09-2026","d":"Sep 30","s":"2026-09-30T10:28:29","f":"Katie Marie","l":"Adamo","e":"kwalsh417@gmail.com","p":"(772) 275-1126","src":"Instagram"},{"m":"09-2026","d":"Sep 30","s":"2026-09-30T07:57:07","f":"Hank","l":"Mastermaker","e":"hankmastermaker@gmail.com","p":"(702) 439-4301","src":"Facebook"},{"m":"09-2026","d":"Sep 30","s":"2026-09-30T03:42:02","f":"Rochelle","l":"McCall","e":"ro.mirrorme@gmail.com","p":"(702) 286-7474","src":"Facebook"},{"m":"09-2026","d":"Sep 29","s":"2026-09-29T02:22:40","f":"Kris","l":"Griffin","e":"fluffydixie83@gmail.com","p":"(972) 363-5276","src":"Instagram"},{"m":"09-2026","d":"Sep 28","s":"2026-09-28T23:28:23","f":"Giovanna","l":"Braggs","e":"Getmoneyhunny@gmail.com","p":"(702) 488-5538","src":"Facebook"},{"m":"09-2026","d":"Sep 28","s":"2026-09-28T21:48:52","f":"Buckminster","l":"Bruno","e":"Brunoinvestigations@yahoo.com","p":"(702) 666-5540","src":"Facebook"},{"m":"09-2026","d":"Sep 28","s":"2026-09-28T14:04:14","f":"Patricia","l":"Barbarin","e":"patricia_barbarin@yahoo.com","p":"(661) 406-6056","src":"Facebook"},{"m":"09-2026","d":"Sep 27","s":"2026-09-27T13:07:30","f":"Neva Dreyer","l":"Liebe","e":"nevaliebe@yahoo.com","p":"(702) 858-3474","src":"Instagram"},{"m":"09-2026","d":"Sep 27","s":"2026-09-27T00:14:19","f":"Jerimiah","l":"Tipton","e":"ottersdragons@gmail.com","p":"(702) 721-0378","src":"Instagram"},{"m":"09-2026","d":"Sep 27","s":"2026-09-27T00:00:10","f":"DIAVION-STACKS","l":"DeNiro","e":"2021stacks@gmail.com","p":"(347) 651-1482","src":"Instagram"},{"m":"09-2026","d":"Sep 25","s":"2026-09-25T14:01:07","f":"Angelarosemarie","l":"Cruz","e":"angiermbaby@gmail.com","p":"(254) 368-3169","src":"Instagram"},{"m":"09-2026","d":"Sep 25","s":"2026-09-25T12:26:28","f":"Davion","l":"Britt","e":"dvnbritt0517@gmail.com","p":"(909) 910-0472","src":"Instagram"},{"m":"09-2026","d":"Sep 25","s":"2026-09-25T02:41:31","f":"Fred","l":"Evenden","e":"ht400shagitman@aol.com","p":"(812) 228-6810","src":"Facebook"},{"m":"09-2026","d":"Sep 23","s":"2026-09-23T00:25:30","f":"Howard","l":"Decker","e":"Jdspet@gmail.com","p":"(714) 225-4791","src":"Facebook"},{"m":"09-2026","d":"Sep 22","s":"2026-09-22T17:11:43","f":"Ninfa","l":"Williams","e":"ninfawilliams5@gmail.com","p":"(661) 612-9844","src":"Instagram"},{"m":"09-2026","d":"Sep 22","s":"2026-09-22T14:50:10","f":"Marquis","l":"Ellis","e":"kingstonveli25@gmail.com","p":"(904) 780-8818","src":"Instagram"},{"m":"09-2026","d":"Sep 22","s":"2026-09-22T08:59:54","f":"Jennifer","l":"Southard","e":"Jennifer.southard2021@outlook.com","p":"(702) 303-9502","src":"Facebook"},{"m":"09-2026","d":"Sep 22","s":"2026-09-22T06:43:57","f":"Katrina","l":"Shrader","e":"katrinashrader@yahoo.com","p":"(702) 754-7647","src":"Facebook"},{"m":"09-2026","d":"Sep 22","s":"2026-09-22T03:46:08","f":"Robert","l":"Masi","e":"bboomer21@aol.com","p":"(845) 522-1366","src":"Instagram"},{"m":"09-2026","d":"Sep 21","s":"2026-09-21T22:13:44","f":"Fred","l":"Evenden","e":"ht400shagitman@aol.com","p":"(812) 228-6810","src":"Facebook"},{"m":"09-2026","d":"Sep 21","s":"2026-09-21T20:40:12","f":"Shelly","l":"lortie","e":"marshellelortie@gmail.com","p":"(702) 274-3285","src":"Instagram"},{"m":"09-2026","d":"Sep 21","s":"2026-09-21T20:20:47","f":"Maythew","l":"McAllister","e":"matthewstarr168@gmail.com","p":"(702) 913-2819","src":"Facebook"},{"m":"09-2026","d":"Sep 21","s":"2026-09-21T20:11:20","f":"Paul","l":"Bruno.","e":"brunoinvestigations@yahoo.com","p":"(702) 666-5542","src":"Instagram"},{"m":"09-2026","d":"Sep 21","s":"2026-09-21T16:25:33","f":"Muhammad","l":"Amin","e":"amlimo702@gmail.com","p":"(312) 523-7882","src":"Facebook"},{"m":"09-2026","d":"Sep 21","s":"2026-09-21T15:43:24","f":"Alyson","l":"Jackson-Eaglin","e":"alysonjacksoneaglin@gmail.com","p":"(773) 892-2831","src":"Facebook"},{"m":"09-2026","d":"Sep 21","s":"2026-09-21T14:26:18","f":"Terrence","l":"Johnson","e":"terremce.tj@gmail.com","p":"(702) 513-0421","src":"Instagram"},{"m":"09-2026","d":"Sep 21","s":"2026-09-21T13:28:59","f":"Renee","l":"Johnson","e":"Pavingpathwaysph011026@gmail.com","p":"(702) 235-1783","src":"Facebook"},{"m":"09-2026","d":"Sep 21","s":"2026-09-21T00:29:41","f":"frank","l":"vecchio","e":"Robertandfrank1323@gmail.com","p":"(210) 574-8236","src":"Facebook"},{"m":"09-2026","d":"Sep 20","s":"2026-09-20T23:01:18","f":"Martin","l":"Hernandez","e":"mherna1260@gmail.com","p":"(626) 201-5031","src":"Instagram"},{"m":"09-2026","d":"Sep 20","s":"2026-09-20T19:43:56","f":"Alice","l":"Mesa","e":"mesaah2538@gmail.com","p":"(702) 326-7024","src":"Facebook"},{"m":"09-2026","d":"Sep 20","s":"2026-09-20T15:56:10","f":"Wayne","l":"Dahm","e":"kwhopper2867@aol.com","p":"(417) 850-2757","src":"Facebook"},{"m":"09-2026","d":"Sep 20","s":"2026-09-20T14:47:15","f":"Raychelle","l":"Trimble","e":"raychelletrimble2@gmail.com","p":"(323) 303-4160","src":"Facebook"},{"m":"09-2026","d":"Sep 20","s":"2026-09-20T04:24:57","f":"Thomas","l":"Shizuru","e":"thomas.shizuru@icloud.com","p":"(702) 265-8960","src":"Facebook"},{"m":"09-2026","d":"Sep 20","s":"2026-09-20T04:06:48","f":"Linda","l":"Collins","e":"lindac41949@gmail.com","p":"(702) 218-5562","src":"Facebook"},{"m":"09-2026","d":"Sep 20","s":"2026-09-20T03:52:59","f":"Eileen","l":"Boyle","e":"eileenb3434@gmail.com","p":"(702) 885-0771","src":"Facebook"},{"m":"09-2026","d":"Sep 19","s":"2026-09-19T23:56:31","f":"Debra","l":"Pierce Kreager","e":"dkbham@hotmail.com","p":"(205) 979-4769","src":"Facebook"},{"m":"09-2026","d":"Sep 19","s":"2026-09-19T23:52:17","f":"Corey","l":"Igou","e":"coreyaine54@gmail.com","p":"(702) 219-6487","src":"Facebook"},{"m":"09-2026","d":"Sep 19","s":"2026-09-19T23:14:58","f":"Cathy","l":"Haraburdo","e":"HaraburdoC@gmail.com","p":"7024703217.0","src":"Instagram"},{"m":"09-2026","d":"Sep 19","s":"2026-09-19T22:34:54","f":"AhLex","l":"Winrow","e":"alexandrawinrow@yahoo.com","p":"(702) 272-4597","src":"Instagram"},{"m":"09-2026","d":"Sep 18","s":"2026-09-18T19:34:59","f":"Warren","l":"Reed","e":"reedwarren73@gmail.com","p":"(323) 632-4164","src":"Facebook"},{"m":"09-2026","d":"Sep 18","s":"2026-09-18T16:41:39","f":"Ken","l":"Gorelik","e":"kengorelik@gmail.com","p":"(312) 644-1763","src":"Facebook"},{"m":"09-2026","d":"Sep 18","s":"2026-09-18T14:44:18","f":"ALFONSO","l":"VILLARREAL","e":"AlfonsoVillarreal00@gmail.com","p":"(702) 488-2315","src":"Facebook"},{"m":"09-2026","d":"Sep 17","s":"2026-09-17T23:48:49","f":"Jason","l":"Marlow","e":"vegasjay25@yahoo.com","p":"(702) 980-1045","src":"Instagram"},{"m":"09-2026","d":"Sep 17","s":"2026-09-17T21:37:30","f":"Yanni","l":"Kratsas","e":"yjkratsas@aol.com","p":"(702) 830-6966","src":"Facebook"},{"m":"09-2026","d":"Sep 17","s":"2026-09-17T19:16:57","f":"John","l":"Soden","e":"jsoden222@gmail.com","p":"(954) 999-3950","src":"Facebook"},{"m":"09-2026","d":"Sep 17","s":"2026-09-17T11:30:30","f":"Saied","l":"Kartam","e":"saied.kartam@yahoo.com","p":"(714) 267-0110","src":"Instagram"},{"m":"09-2026","d":"Sep 16","s":"2026-09-16T22:27:21","f":"Linda","l":"Adams","e":"lindahadams@hotmail.com","p":"(702) 465-7191","src":"Instagram"},{"m":"09-2026","d":"Sep 16","s":"2026-09-16T05:36:59","f":"Amber","l":"Larsen","e":"extramail4u2@gmail.com","p":"(725) 284-4296","src":"Facebook"},{"m":"09-2026","d":"Sep 16","s":"2026-09-16T03:08:58","f":"Sash","l":"Hogan","e":"sashhogans@gmail.com","p":"(702) 801-6129","src":"Facebook"},{"m":"09-2026","d":"Sep 15","s":"2026-09-15T00:15:26","f":"Diane","l":"Couture","e":"dianeevh@gmail.com","p":"(702) 665-9415","src":"Facebook"},{"m":"09-2026","d":"Sep 15","s":"2026-09-15T00:05:04","f":"maria","l":"Elgar","e":"showbizgirl@mac.com","p":"(323) 793-3996","src":"Facebook"},{"m":"09-2026","d":"Sep 14","s":"2026-09-14T21:19:02","f":"Jojo","l":"Evermore","e":"jojotacos204@outlook.com","p":"(702) 699-9151","src":"Facebook"},{"m":"09-2026","d":"Sep 14","s":"2026-09-14T17:24:09","f":"Michael","l":"Higgins","e":"18mikehiggins44@gmail.com","p":"(702) 505-5861","src":"Facebook"},{"m":"09-2026","d":"Sep 14","s":"2026-09-14T11:18:40","f":"Pamela","l":"Jane","e":"Plindemoen@aol.com","p":"(612) 309-1026","src":"Facebook"},{"m":"09-2026","d":"Sep 14","s":"2026-09-14T05:14:16","f":"Edwin","l":"Young","e":"edwin_young78@hotmail.com","p":"(702) 857-1950","src":"Instagram"},{"m":"09-2026","d":"Sep 13","s":"2026-09-13T22:12:17","f":"Cynthia","l":"Ward","e":"banditward20@gmail.com","p":"(725) 316-0306","src":"Facebook"},{"m":"09-2026","d":"Sep 13","s":"2026-09-13T19:51:52","f":"Stanya","l":"Speed","e":"sspeedwd@yahoo.com","p":"(725) 910-5746","src":"Instagram"},{"m":"09-2026","d":"Sep 13","s":"2026-09-13T15:58:39","f":"Kareen","l":"Kuhry","e":"khay1175@hotmail.com","p":"(760) 556-8691","src":"Facebook"},{"m":"09-2026","d":"Sep 13","s":"2026-09-13T15:07:15","f":"Patricia","l":"Fenzel","e":"Scoobyblanket@yahoo.com","p":"(702) 596-0148","src":"Facebook"},{"m":"09-2026","d":"Sep 13","s":"2026-09-13T13:58:45","f":"Harvey","l":"williams","e":"harveyaw111@gmail.com","p":"(702) 218-5907","src":"Instagram"},{"m":"09-2026","d":"Sep 13","s":"2026-09-13T12:56:40","f":"Jared","l":"Bailey","e":"jaredb26@gmail.com","p":"(808) 738-6715","src":"Facebook"},{"m":"09-2026","d":"Sep 13","s":"2026-09-13T08:46:30","f":"Gilbert","l":"Guillen","e":"gilbertnpepperguillen1964@gmail.com","p":"(702) 308-0541","src":"Facebook"},{"m":"09-2026","d":"Sep 13","s":"2026-09-13T06:34:49","f":"Kevin","l":"Williams","e":"bbe0777777@gmail.com","p":"(702) 852-4924","src":"Instagram"},{"m":"09-2026","d":"Sep 13","s":"2026-09-13T05:03:21","f":"Linde","l":"Borchert","e":"harpo2860@gmail.com","p":"(503) 268-7567","src":"Facebook"},{"m":"09-2026","d":"Sep 13","s":"2026-09-13T04:29:02","f":"Mark","l":"Delbridge","e":"kaizerishungry@hotmail.com","p":"(702) 683-6900","src":"Instagram"},{"m":"09-2026","d":"Sep 12","s":"2026-09-12T23:45:17","f":"Pamela","l":"Wilson","e":"wilsonpamela278@gmail.com","p":"(702) 772-9830","src":"Facebook"},{"m":"09-2026","d":"Sep 12","s":"2026-09-12T20:59:13","f":"Corinne","l":"Peterson-Mosdell","e":"Corinne.Mosdell@hotmail.com","p":"(435) 592-9198","src":"Facebook"},{"m":"09-2026","d":"Sep 12","s":"2026-09-12T19:36:19","f":"Cedric","l":"Myers","e":"cedricxl23@gmail.com","p":"(702) 807-8074","src":"Instagram"},{"m":"09-2026","d":"Sep 12","s":"2026-09-12T15:49:31","f":"Annette","l":"Flory","e":"Bluebunnies3@yahoo.com","p":"(701) 310-5811","src":"Facebook"},{"m":"09-2026","d":"Sep 12","s":"2026-09-12T08:59:49","f":"Mateo","l":"Algod\u00f3n","e":"Cottonfinestscorporation@gmail.com","p":"(213) 854-3002","src":"Facebook"},{"m":"09-2026","d":"Sep 12","s":"2026-09-12T01:45:32","f":"Neva Liebe","l":"Dreyer Liebe","e":"nevaliebe@yahoo.com","p":"(702) 850-3474","src":"Facebook"},{"m":"09-2026","d":"Sep 11","s":"2026-09-11T13:48:56","f":"Sunee","l":"Creighton","e":"creightonss7@gmail.com","p":"(785) 269-7500","src":"Facebook"},{"m":"09-2026","d":"Sep 11","s":"2026-09-11T06:27:45","f":"Ej","l":"Vertudez","e":"ejvertudez@gmail.com","p":"(702) 890-3185","src":"Instagram"},{"m":"09-2026","d":"Sep 11","s":"2026-09-11T04:57:53","f":"Nicole","l":"Lewis-Gorman","e":"lives4theocean@gmail.com","p":"(702) 683-1015","src":"Instagram"},{"m":"09-2026","d":"Sep 10","s":"2026-09-10T03:17:27","f":"Anthony","l":"Martinez","e":"Anthonymackmartinez@gmail.com","p":"(909) 359-8648","src":"Facebook"},{"m":"09-2026","d":"Sep 10","s":"2026-09-10T01:47:54","f":"Uchies","l":"SumPlayyer","e":"treymanley12344@gmail.com","p":"(702) 300-5059","src":"Facebook"},{"m":"09-2026","d":"Sep 9","s":"2026-09-09T20:01:41","f":"\ud835\udd10\ud835\udd26\ud835\udd20\ud835\udd25\ud835\udd21\ud835\udd1e\ud835\udd05\ud835\udd26\ud835\udd31\ud835\udd20\ud835\udd25","l":"Coronado","e":"michellecoronado61@gmail.com","p":"(702) 748-3380","src":"Instagram"},{"m":"09-2026","d":"Sep 9","s":"2026-09-09T19:04:47","f":"Luz Adriana","l":"Cortes","e":"Lacg0926@gmail.com","p":"(407) 923-5504","src":"Facebook"},{"m":"09-2026","d":"Sep 9","s":"2026-09-09T00:39:59","f":"Hazel","l":"Frye","e":"blkbarbchef20@gmail.com","p":"(702) 210-8889","src":"Instagram"},{"m":"09-2026","d":"Sep 8","s":"2026-09-08T07:10:10","f":"Elijah","l":"Towner","e":"Chereetowner8@gmail.com","p":"(702) 513-2133","src":"Facebook"},{"m":"09-2026","d":"Sep 7","s":"2026-09-07T21:16:33","f":"Edward","l":"Briscoe","e":"ebriscoe2025@gmail.com","p":"(725) 324-8409","src":"Facebook"},{"m":"09-2026","d":"Sep 7","s":"2026-09-07T18:55:51","f":"Dvgg","l":"Dcv","e":"ilikemoney125945@gmail.com","p":"(702) 666-3216","src":"Instagram"},{"m":"09-2026","d":"Sep 7","s":"2026-09-07T16:35:26","f":"Patricia","l":"Barbarin","e":"patricia_barbarin@yahoo.com","p":"(661) 406-6056","src":"Facebook"},{"m":"09-2026","d":"Sep 7","s":"2026-09-07T13:24:14","f":"Tonie","l":"Cabral - Broneske","e":"poltergeist1066@gmail.com","p":"(702) 595-8815","src":"Facebook"},{"m":"09-2026","d":"Sep 7","s":"2026-09-07T06:34:33","f":"Ariella","l":"Isabella","e":"ariellaisa@gmail.com","p":"(702) 406-9184","src":"Instagram"},{"m":"09-2026","d":"Sep 7","s":"2026-09-07T03:02:20","f":"Sean","l":"Van Gorden","e":"vangordensean@gmail.com","p":"(725) 207-6161","src":"Facebook"},{"m":"09-2026","d":"Sep 7","s":"2026-09-07T02:29:03","f":"T.","l":"R.","e":"tonytr0313@yahoo.com","p":"(808) 877-1588","src":"Facebook"},{"m":"09-2026","d":"Sep 7","s":"2026-09-07T00:35:46","f":"John","l":"DeBaun","e":"johndelv24@gmail.com","p":"(702) 263-7742","src":"Facebook"},{"m":"09-2026","d":"Sep 6","s":"2026-09-06T23:04:37","f":"Allen","l":"Schwartz","e":"dointmed@aol.com","p":"(702) 538-4240","src":"Facebook"},{"m":"09-2026","d":"Sep 6","s":"2026-09-06T19:59:02","f":"Lee R","l":"Saulter","e":"ametriuscosmetics@gmail.com","p":"(224) 805-1952","src":"Facebook"},{"m":"09-2026","d":"Sep 6","s":"2026-09-06T17:50:40","f":"Davion","l":"Britt","e":"dvnbritt0517@gmail.com","p":"(909) 910-0472","src":"Instagram"},{"m":"09-2026","d":"Sep 6","s":"2026-09-06T16:44:56","f":"Meka","l":"Jackson","e":"sjackson6118@yahoo.com","p":"(630) 770-5608","src":"Facebook"},{"m":"09-2026","d":"Sep 5","s":"2026-09-05T21:14:39","f":"Freeman","l":"Lee","e":"referee1007@hotmail.com","p":"(347) 595-3909","src":"Facebook"},{"m":"09-2026","d":"Sep 5","s":"2026-09-05T06:37:28","f":"Andrea","l":"Hooker","e":"dreaaav93@gmail.com","p":"(702) 577-7530","src":"Facebook"},{"m":"09-2026","d":"Sep 5","s":"2026-09-05T01:02:55","f":"denise","l":"Christophe","e":"dchristophe00@gmail.com","p":"(310) 948-5946","src":"Instagram"},{"m":"09-2026","d":"Sep 5","s":"2026-09-05T01:00:26","f":"Barri","l":"Bishoff Whitaker","e":"bjw1124@yahoo.com","p":"(916) 410-5681","src":"Facebook"},{"m":"09-2026","d":"Sep 4","s":"2026-09-04T22:35:13","f":"Linda","l":"Lopipero","e":"Linda.loves2020@gmail.com","p":"(702) 517-2331","src":"Facebook"},{"m":"09-2026","d":"Sep 4","s":"2026-09-04T20:57:51","f":"Jp","l":"Morgn","e":"Bigshamu40@gmail.com","p":"(725) 346-6692","src":"Facebook"},{"m":"09-2026","d":"Sep 4","s":"2026-09-04T19:42:50","f":"Joudi Alssady","l":"Alsaady","e":"joudialssady@gmail.com","p":"(661) 816-6358","src":"Facebook"},{"m":"09-2026","d":"Sep 4","s":"2026-09-04T18:19:24","f":"Suzanne","l":"Hightower","e":"suzannehightower62@gmail.com","p":"(702) 854-1258","src":"Facebook"},{"m":"09-2026","d":"Sep 4","s":"2026-09-04T11:20:52","f":"Gary","l":"Payne","e":"garyinlv@outlook.com","p":"(702) 629-9766","src":"Facebook"},{"m":"09-2026","d":"Sep 4","s":"2026-09-04T08:27:24","f":"Tony","l":"Santana","e":"twsantacr@yahoo.com","p":"(714) 720-2236","src":"Facebook"},{"m":"09-2026","d":"Sep 4","s":"2026-09-04T03:26:00","f":"Dean","l":"Perry","e":"nauticus2023@gmail.com","p":"(725) 292-8204","src":"Instagram"},{"m":"09-2026","d":"Sep 3","s":"2026-09-03T23:52:23","f":"Frankie","l":"Merenda","e":"m062283m@gmail.com","p":"(702) 986-4404","src":"Facebook"},{"m":"09-2026","d":"Sep 3","s":"2026-09-03T16:20:18","f":"Ruth","l":"Gillis","e":"gillisruth25@gmail.com","p":"(702) 444-8240","src":"Facebook"},{"m":"09-2026","d":"Sep 3","s":"2026-09-03T15:56:16","f":"Issah","l":"Abubakarii","e":"Authenticme248@gmail.com","p":"(702) 266-4330","src":"Instagram"},{"m":"09-2026","d":"Sep 3","s":"2026-09-03T15:39:51","f":"Denise","l":"Saunders","e":"dnscl72@gmail.com","p":"(725) 309-3850","src":"Instagram"},{"m":"09-2026","d":"Sep 3","s":"2026-09-03T06:14:57","f":"Xavier","l":"Townsend","e":"xtown33@gmail.com","p":"(702) 210-2695","src":""},{"m":"09-2026","d":"Sep 3","s":"2026-09-03T02:31:13","f":"Barbara","l":"Redding","e":"barbararedding59@gmail.com","p":"(215) 626-6429","src":""},{"m":"09-2026","d":"Sep 3","s":"2026-09-03T01:58:02","f":"Brian","l":"Washington","e":"brianwashington808@icloud.com","p":"(808) 258-9883","src":""},{"m":"09-2026","d":"Sep 2","s":"2026-09-02T22:54:02","f":"Charlie","l":"Loya","e":"loyacharlie.cl@gmail.com","p":"(323) 841-2590","src":""},{"m":"09-2026","d":"Sep 2","s":"2026-09-02T21:10:52","f":"Cathe","l":"Carmack","e":"cathecarmack@yahoo.com","p":"(469) 329-8016","src":""},{"m":"09-2026","d":"Sep 2","s":"2026-09-02T20:55:07","f":"Jeff","l":"Nolen","e":"Jl_nolen@icloud.com","p":"(760) 835-4866","src":""},{"m":"09-2026","d":"Sep 1","s":"2026-09-01T16:56:47","f":"Katree","l":"Saunders","e":"empresstreez@gmail.com","p":"(702) 544-1740","src":""},{"m":"09-2026","d":"Sep 1","s":"2026-09-01T06:01:55","f":"Jennifer","l":"edwards","e":"jn.edwards13@yahoo.com","p":"(916) 730-9325","src":""},{"m":"09-2026","d":"Sep 1","s":"2026-09-01T04:01:52","f":"Carmen","l":"Munoz","e":"cmunoz47023@gmail.com","p":"(702) 250-6658","src":""},{"m":"09-2026","d":"Sep 1","s":"2026-09-01T01:20:03","f":"Harvey","l":"Robinson","e":"hdr780wood@yahoo.com","p":"(702) 418-6169","src":""},{"m":"08-2026","d":"Aug 31","s":"2026-08-31T22:02:04","f":"Geralyn","l":"Burrell","e":"gsb0830@gmail.com","p":"(702) 510-5815","src":""},{"m":"08-2026","d":"Aug 31","s":"2026-08-31T20:12:54","f":"Joe","l":"Suggs","e":"jcsuggs64@gmail.com","p":"(702) 513-1904","src":""},{"m":"08-2026","d":"Aug 31","s":"2026-08-31T05:40:27","f":"Thomas","l":"Wilson Jr.","e":"tqwilson3@gmail.com","p":"(313) 409-4824","src":""},{"m":"08-2026","d":"Aug 31","s":"2026-08-31T04:38:23","f":"Stacks","l":"De Niro","e":"2021Stacks@gmail.com","p":"(347) 651-1482","src":""},{"m":"08-2026","d":"Aug 31","s":"2026-08-31T00:33:02","f":"Lakeia","l":"Culberson","e":"Affordablekidzcloset@gmail.com","p":"(213) 399-6585","src":""},{"m":"08-2026","d":"Aug 30","s":"2026-08-30T13:05:16","f":"Loren B","l":"Lambert","e":"lorenlambert1@gmail.com","p":"(725) 293-9174","src":""},{"m":"08-2026","d":"Aug 30","s":"2026-08-30T07:50:19","f":"Sofia","l":"Mendez","e":"Soniamendoza_2007@hotmail.com","p":"(702) 436-1249","src":""},{"m":"08-2026","d":"Aug 30","s":"2026-08-30T00:02:26","f":"Robert","l":"Audouin","e":"Nexxxtlevellogisticsllc@yahoo.com","p":"(424) 335-3700","src":""},{"m":"08-2026","d":"Aug 29","s":"2026-08-29T19:50:08","f":"Jammal","l":"Crawford","e":"thedukeofdiplospalace@gmail.com","p":"(725) 335-4397","src":""},{"m":"08-2026","d":"Aug 29","s":"2026-08-29T13:21:06","f":"Rne","l":"Ortiz","e":"resa0407@gmail.com","p":"(702) 467-9725","src":""},{"m":"08-2026","d":"Aug 29","s":"2026-08-29T11:51:25","f":"Thomas","l":"Drawsand","e":"thomaskdlewis@yahoo.com","p":"(323) 374-8584","src":""},{"m":"08-2026","d":"Aug 29","s":"2026-08-29T10:30:36","f":"Lamar","l":"Wade","e":"wadelamar57@gmail.com","p":"(725) 244-5384","src":""},{"m":"08-2026","d":"Aug 29","s":"2026-08-29T04:52:43","f":"antonae","l":"Alexander","e":"antonae85@gmail.com","p":"(213) 655-3077","src":""},{"m":"08-2026","d":"Aug 28","s":"2026-08-28T23:54:58","f":"Dorion","l":"Jones","e":"moreleads15@gmail.com","p":"(702) 812-3735","src":""},{"m":"08-2026","d":"Aug 28","s":"2026-08-28T23:02:57","f":"Eddie","l":"Redmon","e":"maxiepriest76@yahoo.com","p":"(336) 707-4270","src":""},{"m":"08-2026","d":"Aug 28","s":"2026-08-28T20:31:42","f":"Zenaida","l":"Aponte","e":"zaponte1959@gmail.com","p":"(702) 417-4892","src":""},{"m":"08-2026","d":"Aug 28","s":"2026-08-28T16:38:09","f":"Cindy","l":"Coffey","e":"ccoffey120758@gmail.com","p":"(725) 728-8851","src":""},{"m":"08-2026","d":"Aug 28","s":"2026-08-28T15:23:35","f":"Jerry","l":"Carter","e":"carterjerry0985@gmail.com","p":"(702) 713-6901","src":""},{"m":"08-2026","d":"Aug 28","s":"2026-08-28T14:08:09","f":"Tyrannus - Terran Hadrius David/ Davis","l":"Ulysses","e":"newavalon.hr@gmail.com","p":"(702) 970-3624","src":""},{"m":"08-2026","d":"Aug 28","s":"2026-08-28T13:55:05","f":"Vick","l":"Igou","e":"igouvickie@gmail.com","p":"(702) 219-6487","src":""},{"m":"08-2026","d":"Aug 28","s":"2026-08-28T13:38:28","f":"Carol","l":"Taylor-Dus","e":"larrycaroldus@gmail.com","p":"(630) 698-6928","src":""},{"m":"08-2026","d":"Aug 28","s":"2026-08-28T03:06:57","f":"Michelle","l":"Kinney","e":"agate168@yahoo.com","p":"(702) 372-6455","src":""},{"m":"08-2026","d":"Aug 26","s":"2026-08-26T13:42:18","f":"Tommy","l":"Thompson","e":"Tommyinspired@gmail.com","p":"(909) 827-5957","src":""},{"m":"08-2026","d":"Aug 26","s":"2026-08-26T05:21:05","f":"Paul","l":"Cardoza","e":"cardoza.paul.619@gmail.com","p":"(725) 319-9123","src":""},{"m":"08-2026","d":"Aug 25","s":"2026-08-25T21:20:58","f":"Rochelle","l":"McCall","e":"ro.mirrorme@gmail.com","p":"(702) 286-7474","src":""},{"m":"","d":"\u2014","s":"","f":"Mila","l":"Lluisma","e":"Lluismamilagros@yahoo.com","p":"(702) 712-4025","src":""}],"counts":{"08-2026":25,"09-2026":117},"undated":1,"unique":136,"dupes":7,"platform":{"Instagram":36,"Facebook":71},"from":"Aug 25","to":"Sep 30","toISO":"2026-09-30"}};
 const CH_COLOR = {Display:"var(--disp)", Social:"var(--soc)", SEM:"var(--sem)"};
 const CH_ORDER = ["Display","Social","SEM"];
-const state = {tab:"ALL", open:{}};
+const state = {tab:"ALL", period:"ALL", open:{}, showContact:false};
+
+/* The deck reports a Monthly Performance table for each tactic, and those tables
+   are account level: no tactic breaks a month out by property. Meta is the one
+   exception, because it runs a single campaign for The Onyx, so Meta's monthly
+   figures are that property's in full. Everything else stays at flight level and
+   is labelled as such rather than split by guesswork. */
+const PERIODS = [
+  {k:"ALL",     label:"Full flight", span:"Aug 19 \u2013 Sep 29, 2026", days:42},
+  {k:"08-2026", label:"August",      span:"Aug 19 \u2013 31, 2026",     days:13},
+  {k:"09-2026", label:"September",   span:"Sep 1 \u2013 29, 2026",      days:29},
+];
+const META_PROP = "ONX";
 
 const $ = id => document.getElementById(id);
 const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
@@ -196,6 +258,27 @@ const compact = v => { v=Number(v)||0; return v>=1e6?(v/1e6).toFixed(1)+"M":v>=1
 const secs = v => { const m=Math.floor(v/60), r=v%60; return m?`${m}m ${r}s`:`${r}s`; };
 const props = () => state.tab === "ALL" ? D.order : [state.tab];
 const isAll = () => state.tab === "ALL";
+const per = () => PERIODS.find(x => x.k === state.period) || PERIODS[0];
+const isFlight = () => state.period === "ALL";
+const perDay = v => { const d = per().days; return d ? v/d : 0; };
+/* account-level rows for the selected month */
+function monthChan(k){
+  const M = D.shared.monthly || {};
+  return CH_ORDER.filter(c => M[c] && M[c][k || state.period])
+    .map(c => ({channel:c, impressions:0, clicks:0, visits:0, conversions:0,
+                engagement:0, leads:0, ...M[c][k || state.period]}));
+}
+/* what the selected month can honestly say about the selected tab */
+function monthScope(){
+  if (isFlight()) return {kind:"flight"};
+  const rows = monthChan();
+  if (isAll()) return {kind:"full", rows};
+  if (state.tab === META_PROP){
+    const soc = rows.filter(r => r.channel === "Social");
+    if (soc.length) return {kind:"partial", rows:soc, only:"Social"};
+  }
+  return {kind:"none", rows};
+}
 const accent = () => isAll() ? "#2F6FED" : D.properties[state.tab].accent;
 
 function chanTotals(){
@@ -230,6 +313,46 @@ function paintTabs(){
     state.tab = b.dataset.t; state.open = {}; render(); };
 }
 
+function paintPeriods(){
+  const sc = monthScope();
+  $("periods").innerHTML = '<span class="plab">Period</span>' +
+    PERIODS.map(x => `<button data-p="${x.k}" aria-pressed="${state.period===x.k}">${
+      x.label}</button>`).join("") +
+    `<span class="pspan">${per().span} · ${per().days} days${
+      isFlight() ? "" : (sc.kind === "full" ? "" : sc.kind === "partial"
+        ? " · Meta only at this level" : " · account level only")}</span>`;
+  $("periods").onclick = e => { const b = e.target.closest("button"); if (!b) return;
+    state.period = b.dataset.p; state.open = {}; render(); };
+}
+
+/* One banner, stated once, saying exactly which numbers move with the month
+   and which do not. Everything below it then carries a "Full flight" chip. */
+function periodFlag(){
+  if (isFlight()) return "";
+  const sc = monthScope(), m = per().label;
+  const acct = monthChan().map(r => `${r.channel} ${n0(r.impressions)}`).join(" · ");
+  if (sc.kind === "full")
+    return `<div class="flag"><b>${m} covers ${per().span} (${per().days} days).</b>
+      Impressions, clicks and conversions above are ${m}'s. Campaigns, creative,
+      ad groups, keywords, fences and geography are reported for the whole flight
+      only, so those tables do not change with this pill.</div>`;
+  if (sc.kind === "partial")
+    return `<div class="flag"><b>${m} is exact for Meta only.</b>
+      The Onyx runs the account's single Meta campaign, so its ${m} social figures
+      are complete. Display and Search are not broken out by property for a single
+      month, and everything below Tactics is flight level.
+      <br>Account totals for ${m}: ${acct} impressions.</div>`;
+  return `<div class="flag"><b>${m} is not reported for this property.</b>
+    The report splits by month at account level only, and ${
+      esc(D.properties[state.tab].name)} is not on Meta, which is the one tactic
+    that resolves to a single property. The figures below are the full flight
+    (${PERIODS[0].span}).
+    <br>Account totals for ${m}: ${acct} impressions.</div>`;
+}
+function fullFlightChip(){
+  return isFlight() ? "" : '<span class="chip warn">Full flight</span>';
+}
+
 /* ---------- panels ---------- */
 function accountTotals(){
   const t = {impressions:0, clicks:0, leads:0, conversions:0};
@@ -257,29 +380,57 @@ function paintCtx(){
     <div class="ctx-stat"><b class="mono">${pct(share)}</b><span>of account impressions</span></div>
     <div class="ctx-stat"><b class="mono">#${rank}</b><span>of ${D.order.length} properties</span></div>
     <div class="ctx-stat"><b class="mono">${me.leads?n0(me.leads):"—"}</b><span>leads</span></div>
+    ${isFlight()?"":'<span class="chip warn">Flight to date</span>'}
     <p class="ctx-line"><b>${esc(p.name)}</b> is running ${ran.join(", ")}${
       missing.length?` · no ${missing.join(", ")}`:""}.</p>
   </div>`;
 }
+function sumRows(rows){
+  const t = {impressions:0,clicks:0,visits:0,conversions:0,engagement:0,leads:0};
+  rows.forEach(r => { for (const k in t) t[k] += r[k]||0; });
+  return t;
+}
 function paintKPIs(){
-  const t = grand();
+  const sc = monthScope();
+  const onMonth = sc.kind === "full" || sc.kind === "partial";
+  const t = onMonth ? sumRows(sc.rows) : grand();
   const ctr = t.impressions ? t.clicks/t.impressions*100 : 0;
+
+  /* August covers 13 days and September 29, so the raw totals are not
+     comparable. The change is shown per day, and only on the later month. */
+  let delta = "";
+  if (onMonth && state.period === "09-2026"){
+    const aug = PERIODS[1];
+    const prev = sumRows(monthChan(aug.k).filter(r => !sc.only || r.channel === sc.only));
+    const a = t.impressions/per().days, b = prev.impressions/aug.days;
+    if (b){ const d = (a/b - 1)*100;
+      delta = ` · <span class="delta ${d>=0?"up":"down"}">${d>=0?"\u25B2":"\u25BC"} ${
+        Math.abs(d).toFixed(0)}% a day vs Aug</span>`; }
+  }
+  const rate = onMonth ? `${n0(perDay(t.impressions))} a day${delta}` : "";
+
   const cells = [
-    ["Impressions", n0(t.impressions), ""],
+    ["Impressions", n0(t.impressions), rate],
     ["Clicks", n0(t.clicks), pct(ctr)+" CTR"],
     ["Leads", n0(t.leads), t.leads ? "Meta lead forms" : "none recorded"],
     ["Conversions", n0(t.conversions), "all tracked actions"],
   ];
-  $("kpiTitle").textContent = isAll() ? "Delivery — all three properties" : "Delivery";
-  $("kpiSub").textContent = D.period;
+  $("kpiTitle").innerHTML = (onMonth
+      ? `Delivery \u2014 ${per().label}${sc.only ? " \u00b7 Meta" : isAll() ? "" : ""}`
+      : isAll() ? "Delivery \u2014 all three properties" : "Delivery")
+    + (sc.kind === "none" ? fullFlightChip() : "");
+  $("kpiSub").textContent = onMonth ? per().span : D.period;
   $("kpis").innerHTML = cells.map(([l,v,n]) =>
     `<div class="kpi"><b class="mono">${v}</b><span>${l}</span><em>${n}</em></div>`).join("");
 }
 
 function paintChannels(){
-  const rows = chanTotals();
+  const sc = monthScope();
+  const onMonth = sc.kind === "full" || sc.kind === "partial";
+  const rows = onMonth ? sc.rows : chanTotals();
   const max = Math.max(...rows.map(r=>r.impressions), 1);
-  $("chSub").textContent = rows.length ? `Select a tactic for detail` : "";
+  $("chSub").innerHTML = (rows.length ? "Select a tactic for detail" : "") +
+    (sc.kind === "none" ? fullFlightChip() : "");
   $("channels").innerHTML = rows.length ? rows.map(r => {
     const open = !!state.open[r.channel];
     return `<div class="ch-wrap" data-open="${open?1:0}">
@@ -296,10 +447,13 @@ function paintChannels(){
     </div>`;
   }).join("")
     : `<p class="empty">No tactics attributed to this property.</p>`;
+  if (sc.kind === "partial") $("channels").insertAdjacentHTML("beforeend",
+    `<p class="note">Display and Search for ${esc(D.properties[state.tab].name)} are not
+     reported by month \u2014 switch the period to <b>Full flight</b> to see them.</p>`);
   // append the campaign table before wiring handlers: assigning innerHTML again
   // would re-parse the container and drop the listeners
   const camp = props().flatMap(p => D.properties[p].campaigns.map(c => ({...c, prop:p})));
-  if (camp.length && isAll()) $("channels").insertAdjacentHTML("beforeend",
+  if (camp.length && isAll() && !onMonth) $("channels").insertAdjacentHTML("beforeend",
     `<div style="margin-top:18px">${
       tbl("Campaigns", ["Campaign","Impr.","Clicks","CTR","Property"],
         camp.sort((a,b)=>b.impressions-a.impressions).map(c => [
@@ -313,21 +467,28 @@ function paintChannels(){
 
 function tacticDetail(r){
   const S = D.shared, P = [];
+  const flightNote = isFlight() ? "" :
+    `<p class="note warn">The tables below cover the full flight
+     (${PERIODS[0].span}). Only the headline row above is ${per().label}.</p>`;
   const mine = props();
   const camp = mine.flatMap(p => D.properties[p].campaigns
     .filter(c => c.channel === r.channel).map(c => ({...c, prop:p})));
 
   if (r.channel === "Social"){
     const onyxOnly = !isAll();
+    /* reach and frequency are only reported for the whole flight, so the rate
+       built from them uses flight leads even when a month is selected */
+    const flightLeads = D.order.reduce((t,k) =>
+      t + ((D.properties[k].channels.Social||{}).leads||0), 0);
     if (S.metaReach) P.push(`<div><div class="eyebrow">Reach</div>
       <div class="kpis" style="margin-top:8px">
         <div class="kpi"><b class="mono">${n0(S.metaReach.reach)}</b><span>People reached</span>
           <em>unique accounts</em></div>
         <div class="kpi"><b class="mono">${S.metaReach.frequency.toFixed(2)}×</b><span>Frequency</span>
           <em>times each saw an ad</em></div>
-        <div class="kpi"><b class="mono">${r.leads&&S.metaReach.reach
-          ? (r.leads/S.metaReach.reach*100).toFixed(2)+"%" : "—"}</b><span>Lead rate</span>
-          <em>leads per person reached</em></div>
+        <div class="kpi"><b class="mono">${flightLeads&&S.metaReach.reach
+          ? (flightLeads/S.metaReach.reach*100).toFixed(2)+"%" : "—"}</b><span>Lead rate</span>
+          <em>${n0(flightLeads)} leads per person reached, full flight</em></div>
       </div></div>`);
     if (S.metaPlatform) P.push(tbl("Facebook vs Instagram",
       ["Platform","Impr.","Clicks","CTR","Leads"],
@@ -340,6 +501,11 @@ function tacticDetail(r){
     if (S.metaGender) P.push(tbl("Gender", ["Gender","Impr.","Clicks","CTR","Leads"],
       S.metaGender.map(x => [esc(x.name[0].toUpperCase()+x.name.slice(1)),
         n0(x.impressions), n0(x.clicks), pct(x.ctr), n0(x.leads)])));
+    if (S.metaAdSets && S.metaAdSets.length > 1) P.push(tbl("Ad sets",
+      ["Ad set","Impr.","Clicks","CTR","Leads"],
+      S.metaAdSets.slice().sort((a,b)=>b.impressions-a.impressions).map(x => [
+        esc(x.name === "RT" ? "RT (retargeting)" : x.name),
+        n0(x.impressions), n0(x.clicks), pct(x.ctr), n0(x.leads)])));
     if (S.metaPost) P.push(tbl("Engagement", ["Interaction","Count"],
       [["Post engagements", n0(S.metaPost.engagement)],
        ["Link clicks", n0(S.metaPost.clicks)],
@@ -347,6 +513,7 @@ function tacticDetail(r){
        ["Shares", n0(S.metaPost.shares)],
        ["Page likes", n0(S.metaPost.likes)]]));
     return `<div class="cols">${P.join("")}</div>
+      ${flightNote}
       <p class="note">${onyxOnly
         ? "Meta runs only for The Onyx, so every figure in this section belongs to this property."
         : "Meta runs only for The Onyx; these figures are that campaign."}
@@ -368,9 +535,10 @@ function tacticDetail(r){
     if (S.fences.length) P.push(tbl("Target fences", ["Fence","Impr."],
       S.fences.slice().sort((a,b)=>b.impressions-a.impressions).slice(0,6)
         .map(f => [esc(f.name), n0(f.impressions)])));
-    return `<div class="cols">${P.join("")}</div>
+    return `<div class="cols">${P.join("")}</div>${flightNote}
       <p class="note">Devices and target fences are reported for the whole geofencing
-      buy, not per property. No foot-traffic visits have registered yet.</p>`;
+      buy, not per property. Foot-traffic visits are matched by the geofencing
+      platform and lag delivery by several weeks.</p>`;
   }
 
   // SEM
@@ -389,7 +557,7 @@ function tacticDetail(r){
     S.semGeo.slice().sort((a,b)=>b.impressions-a.impressions).slice(0,6)
       .map(x => [`${esc(x.name)}<span class="sub">${esc(x.state)}</span>`,
         n0(x.impressions), n0(x.clicks)])));
-  return `<div class="cols">${P.join("")}</div>
+  return `<div class="cols">${P.join("")}</div>${flightNote}
     <p class="note">Ad groups carry the property name; devices, cities and generic
     keywords are reported for the account as a whole.</p>`;
 }
@@ -401,7 +569,7 @@ function paintCreative(){
     for (const g in cr) (groups[g] = groups[g] || []).push(...cr[g].map(c => ({...c, prop:p})));
   });
   const keys = Object.keys(groups);
-  $("crSub").textContent = keys.length ? "By tactic" : "";
+  $("crSub").innerHTML = (keys.length ? "By tactic" : "") + fullFlightChip();
   if (!keys.length){ $("creative").innerHTML = `<p class="empty">No creative reported for this property.</p>`; return; }
   $("creative").innerHTML = `<div class="cols">${keys.map(g => {
     const rows = groups[g].sort((a,b)=>b.impressions-a.impressions);
@@ -447,7 +615,8 @@ function paintSEM(){
   const attributed = ags.reduce((s,a)=>s+a.impressions,0);
 
   const sets = kwFor();
-  $("semSub").textContent = (ags.length || sets.length) ? "Ad groups and keywords" : "";
+  $("semSub").innerHTML = ((ags.length || sets.length) ? "Ad groups and keywords" : "")
+    + fullFlightChip();
   if (!ags.length && !sets.length){
     $("sem").innerHTML = '<p class="empty">No search activity for this property.</p>';
     return;
@@ -463,15 +632,23 @@ function paintSEM(){
                                         conv: t.conv + x.totals.conv}),
                              {impr:0, clicks:0, conv:0});
 
-  const kpiRow = sets.length ? '<div class="kpis" style="margin-bottom:16px">' +
-    '<div class="kpi"><b class="mono">' + n0(tot.impr) + '</b><span>Impressions</span></div>' +
-    '<div class="kpi"><b class="mono">' + n0(tot.clicks) + '</b><span>Clicks</span><em>' +
-      (tot.impr ? pct(tot.clicks/tot.impr*100) : "\u2014") + ' CTR</em></div>' +
-    '<div class="kpi"><b class="mono">' + (tot.conv ? n1(tot.conv) : "\u2014") +
-      '</b><span>Conversions</span></div>' +
-    '<div class="kpi"><b class="mono">' + sets.reduce((t,x) => t + x.rows.length, 0) +
-      '</b><span>Active keywords</span><em>' + idle + ' served nothing</em></div>' +
-    '</div>' : "";
+  const deck = props().reduce((t,k) => {
+    const c = D.properties[k].channels.SEM || {};
+    t.impressions += c.impressions||0; t.clicks += c.clicks||0;
+    t.conversions += c.conversions||0; return t;
+  }, {impressions:0, clicks:0, conversions:0});
+
+  const kpiRow = '<div class="kpis" style="margin-bottom:16px">' +
+    '<div class="kpi"><b class="mono">' + n0(deck.impressions) + '</b><span>Impressions</span>' +
+      '<em>' + PERIODS[0].span + '</em></div>' +
+    '<div class="kpi"><b class="mono">' + n0(deck.clicks) + '</b><span>Clicks</span><em>' +
+      (deck.impressions ? pct(deck.clicks/deck.impressions*100) : "\u2014") + ' CTR</em></div>' +
+    '<div class="kpi"><b class="mono">' + (deck.conversions ? n0(deck.conversions) : "\u2014") +
+      '</b><span>Conversions</span><em>all phone calls</em></div>' +
+    (sets.length ? '<div class="kpi"><b class="mono">' +
+      sets.reduce((t,x) => t + x.rows.length, 0) +
+      '</b><span>Active keywords</span><em>' + idle + ' served nothing</em></div>' : "") +
+    '</div>';
 
   const groupTable = grp.length
     ? tbl("Ad groups",
@@ -487,16 +664,105 @@ function paintSEM(){
             .concat([n0(a.impressions), n0(a.clicks), pct(a.ctr),
                      a.conversions ? n0(a.conversions) : "\u2014"])));
 
+  const deckImpr = props().reduce((t,k) =>
+    t + ((D.properties[k].channels.SEM||{}).impressions||0), 0);
+  const cover = (sets.length && deckImpr) ? tot.impr/deckImpr : 1;
+  const kwCap = sets.length
+    ? `<div class="flag" style="margin-top:0;margin-bottom:16px"><b>Keyword detail is from
+       the opening Google Ads export.</b> It covers ${n0(tot.impr)} impressions and
+       ${n0(tot.clicks)} clicks \u2014 ${pct(cover*100)} of the search activity in this
+       report. The four figures above, and everything else on this page, come from the
+       current report.</div>`
+    : "";
+  const conv = (D.shared.semConv || []);
+  const wk   = (D.shared.semWeekly || []);
+  const convBlock = conv.length ? '<div style="margin-top:22px"><div class="cols">' +
+    tbl("What the conversions were", ["Conversion action","Count"],
+        conv.map(c => [esc(c.name), n0(c.conversions)])) +
+    (wk.length ? tbl("Conversions by week", ["Week ending","Conv."],
+        wk.map(w => [esc(w.name), n0(w.conversions)])) : "") +
+    '</div><p class="note">Every search conversion recorded so far is a phone call. ' +
+    'No form fills or site actions have been tracked against search.</p></div>' : "";
+
   const note = sets.length
     ? rarely + ' keyword' + (rarely === 1 ? ' is' : 's are') +
       ' marked by Google as rarely served \u2014 eligible, but too low-volume to enter ' +
       'auctions, so worth pruning or re-phrasing.'
     : 'Ad groups carry the property name; generic keywords are reported for the account as a whole.';
 
-  $("sem").innerHTML = kpiRow +
+  $("sem").innerHTML = kpiRow + (cover < 0.9 ? kwCap : "") +
     '<div class="cols">' + groupTable + '</div>' +
     (sets.length ? '<div style="margin-top:22px">' + kwTable(sets, isAll() ? 20 : 0) + '</div>' : "") +
+    convBlock +
     '<p class="note">' + note + '</p>';
+}
+
+function paintLeads(){
+  const L = LEADS[state.tab];
+  const panel = $("leadPanel");
+  if (!L){ panel.hidden = true; return; }
+  panel.hidden = false;
+
+  const all  = L.rows || [];
+  const rows = isFlight() ? all : all.filter(r => r.m === state.period);
+  const shown = isFlight() ? (L.counts ? Object.values(L.counts).reduce((a,b)=>a+b,0)
+                                         + (L.undated||0) : all.length)
+                           : (L.counts && L.counts[state.period]) || 0;
+
+  /* Meta's own lead count and this export disagree; say so rather than let the
+     two panels quietly contradict each other. */
+  const meta = isFlight()
+    ? ((D.properties[state.tab].channels.Social || {}).leads || 0)
+    : ((((D.shared.monthly || {}).Social || {})[state.period] || {}).leads || 0);
+  const gap = meta - shown;
+
+  const mask = v => state.showContact ? esc(v)
+    : `<span class="masked">${"\u2022".repeat(Math.min(10, Math.max(4, v.length)))}</span>`;
+
+  const body = rows.map(r => [
+    esc(r.d), esc(r.f), esc(r.l),
+    r.e ? mask(r.e) : "\u2014",
+    r.p ? mask(r.p) : "\u2014"]);
+
+  const tools = `<div class="lead-tools">
+    <div class="kpis" style="gap:0;flex:1">
+      <div class="kpi"><b class="mono">${n0(shown)}</b><span>Leads in the export</span>
+        <em>${isFlight() ? `${esc(L.from)} \u2013 ${esc(L.to)}` : per().label}</em></div>
+      <div class="kpi"><b class="mono">${n0(meta)}</b><span>Leads Meta reports</span>
+        <em>${gap > 0 ? `${n0(gap)} not in the export` : gap < 0
+          ? `${n0(-gap)} more in the export` : "matched"}</em></div>
+      ${isFlight() ? `<div class="kpi"><b class="mono">${n0(L.unique)}</b>
+        <span>Unique email addresses</span><em>${L.dupes
+          ? `${n0(L.dupes)} repeat enquir${L.dupes===1?"y":"ies"}` : "no repeats"}</em></div>` : ""}
+    </div>
+    ${all.length ? `<button class="reveal" id="revealBtn" aria-pressed="${state.showContact}">${
+      state.showContact ? "Hide contact details" : "Show contact details"}</button>` : ""}
+  </div>`;
+
+  if (!all.length){
+    $("leadSub").textContent = "counts only";
+    $("leads").innerHTML = tools +
+      `<p class="note">This is the shareable build. The roster of names, email
+       addresses and phone numbers is held back \u2014 run <code>scripts/build.py</code>
+       without <code>--public</code> for the full list.</p>`;
+    return;
+  }
+
+  $("leadSub").innerHTML = "Meta lead forms" + (isFlight() ? "" :
+    `<span class="chip">${per().label}</span>`);
+  $("leads").innerHTML = tools +
+    `<div class="lead-scroll">${tbl("", ["Date","First name","Last name","Email","Phone"],
+      body, "No leads in this month.")}</div>` +
+    `<p class="note warn">Contact details for people who enquired about a home.
+      Keep this build off anything public \u2014 <code>scripts/build.py --public</code>
+      writes a version with the roster removed.</p>` +
+    (gap ? `<p class="note">Meta counts ${n0(meta)} lead${meta===1?"":"s"} where the export
+      lists ${n0(shown)}. The export also runs to ${esc(L.to)}, past this report's
+      29 September cut. Worth asking the Meta side which submissions did not make it
+      into the export before treating either figure as the number.</p>` : "");
+
+  const rb = $("revealBtn");
+  if (rb) rb.onclick = () => { state.showContact = !state.showContact; paintLeads(); };
 }
 
 function paintGeo(){
@@ -504,7 +770,8 @@ function paintGeo(){
   const fences = D.shared.fences.slice().sort((a,b)=>b.impressions-a.impressions);
   const zones = D.shared.zones;
   const max = Math.max(...g.map(r=>r.impressions), 1);
-  $("geoSub").textContent = isAll() ? "Account level — not reported by property" : "Account level";
+  $("geoSub").innerHTML = (isAll() ? "Account level \u2014 not reported by property"
+                                   : "Account level") + fullFlightChip();
   $("geo").innerHTML = `
     <div class="eyebrow">Cities reached</div>
     <div style="margin-top:8px">${g.map(r => `
@@ -514,15 +781,23 @@ function paintGeo(){
         <span class="v">${n0(r.impressions)}</span>
       </div>`).join("")}</div>
     <div class="cols" style="margin-top:22px">
+      ${tbl("Top zip codes", ["Zip","Impr.","Clicks","CTR","Visits"],
+        (D.shared.zips||[]).slice().sort((a,b)=>b.impressions-a.impressions).map(z => [
+          `${esc(z.zip)}<span class="sub">${esc(z.state)}</span>`,
+          n0(z.impressions), n0(z.clicks), pct(z.ctr), z.visits?n0(z.visits):"0"]),
+        "Zip performance not reported.")}
       ${tbl("Target fences", ["Fence","Impr.","Clicks"],
         fences.map(f => [esc(f.name), n0(f.impressions), f.clicks?n0(f.clicks):"—"]))}
       ${tbl("Conversion zones", ["Property address","Visits"],
         zones.map(z => [esc(z.name), z.visits?n0(z.visits):"0"]),
         "No conversion zones reported.")}
     </div>
-    <p class="note warn">No foot-traffic visits have been recorded yet. Geofencing attribution
-    typically needs several weeks of delivery before visits register, and this campaign has
-    been live since 19 August.</p>
+    ${(() => { const v = zones.reduce((s,z)=>s+(z.visits||0),0);
+      return v ? `<p class="note">${n0(v)} foot-traffic visit${v===1?"":"s"} matched to the
+        property addresses so far, all of them view-through rather than click-through.
+        Geofencing attribution lags delivery, so this figure keeps moving after the
+        report is cut.</p>`
+        : `<p class="note warn">No foot-traffic visits have been recorded yet.</p>`; })()}
     <p class="note">Geography is reported for the account as a whole, so these figures cover
     all three properties regardless of the tab selected.</p>`;
 }
@@ -530,7 +805,8 @@ function paintGeo(){
 /* ---------- render ---------- */
 function render(){
   document.documentElement.style.setProperty("--accent", accent());
-  paintTabs();
+  paintTabs(); paintPeriods();
+  $("flag").innerHTML = periodFlag();
   $("railMeta").textContent = D.period;
   $("footPeriod").textContent = D.period;
   const p = isAll() ? null : D.properties[state.tab];
@@ -540,9 +816,12 @@ function render(){
     `<span>Flight: <b>${D.period}</b></span>`,
     isAll() ? `<span>Showing <b>all three properties</b></span>`
             : `<span>Showing <b>${esc(p.name)}</b></span>`,
-    `<span style="color:#E5B96B">First three weeks of delivery — read early figures with care.</span>`,
+    isFlight() ? `<span>Period: <b>Full flight</b></span>`
+               : `<span>Period: <b>${per().label}</b> · ${per().span}</span>`,
+    `<span style="color:#E5B96B">Six weeks of delivery — read early figures with care.</span>`,
   ].join("");
-  paintCtx(); paintKPIs(); paintChannels(); paintCreative(); paintSEM(); paintGeo();
+  paintCtx(); paintKPIs(); paintChannels(); paintCreative(); paintSEM();
+  paintLeads(); paintGeo();
 }
 render();
 </script>
