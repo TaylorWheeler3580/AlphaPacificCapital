@@ -1,7 +1,7 @@
 # Alpha Pacific Capital — Media Performance Dashboard
 
 Single-file dashboard for three Las Vegas apartment communities, built from the
-pulseMax report covering **19 August – 29 September 2026**.
+pulseMax report covering **19 August – 8 October 2026**.
 
 - **Camino Al Norte** — caminoalnorteapts.com
 - **The Onyx** — theonyxapartments.com
@@ -40,7 +40,7 @@ such, rather than split by guesswork.
 
 ## Two builds, and why
 
-`index.html` carries the Meta lead roster: 143 names, email addresses and phone
+`index.html` carries the Meta lead roster: 152 names, email addresses and phone
 numbers belonging to people who enquired about an apartment. It is the working
 copy for the leasing team.
 
@@ -57,24 +57,48 @@ Two further things are stripped from **both** builds by `build.py`:
 `data/model.json` and `data/leads.json` are both gitignored. If the repository is
 public, only `index-public.html` belongs in it.
 
-## The lead workbook is two exports stacked
+## The lead workbook has four different column layouts
 
-`scripts/parse_leads.py` reads columns A–E. 36 rows are `Date / First / Last /
-Email / Phone`; the other 107 carry an extra platform column at B that shifts
-everything one to the right. Reading by position puts `fb` in the first-name
-column and slides the phone number out of the table, so the parser finds the
-email cell and reads the rest relative to it. It prints a shape check on every
-run — that count must be zero.
+`scripts/parse_leads.py` reads columns A–E across three sheets. The layout varies
+both between sheets and within one sheet:
 
-The platform column is captured where present (71 Facebook, 36 Instagram) but
-not displayed, since only A–E were asked for.
+| Sheet | Layout | Rows |
+|---|---|---|
+| Onyx | Date / First / Last / Email / Phone | 36 |
+| Onyx | Date / fb\|ig / First / Last / Email / Phone | 107 |
+| Camino Al Norte | Date / First / Last / Email / Phone | 4 |
+| Camino Al Norte | Date / fb\|ig / First / Last / Email — **no phone column** | 3 |
+| Elysian at St. Rose | Date / First / Last / Email / Phone | 2 |
 
-**The export and the report do not cover the same window.** The export runs
-25 August – 30 September; the report runs 19 August – 29 September. Meta reports
-153 leads for the flight where the export lists 143, and the export includes
-three leads dated 30 September, after the report's cut. The Leads panel shows
-both figures side by side and says so rather than picking one. Seven rows repeat
-an email address, so 143 submissions are 136 distinct people.
+Reading by position puts `fb` in the first-name column, and on the Camino form
+that has no phone column it prints "Just me" as a phone number. So the parser
+finds the email cell, reads the names back from it, and accepts the following
+cell as a phone only if it parses as one. One Onyx number was stored by Excel as
+a float (`7024703217.0`), where a naive digit strip turns the trailing `.0` into
+an eleventh digit — numeric cells are coerced to int first.
+
+Sheet names are matched by regex, not exact title: "Camino" became "Camino Al
+Norte" between exports.
+
+A shape check prints on every run — malformed rows must be zero.
+
+The platform column is captured where present (74 Facebook, 36 Instagram) but not
+displayed, since only A–E were asked for.
+
+**The export and the report do not cover the same window**, and the gap differs
+by property:
+
+| | Export | Meta reports | |
+|---|---|---|---|
+| The Onyx | 143 (Aug 25 – Sep 30) | 155 | 12 missing |
+| Camino Al Norte | 7 (Oct 8 – 9) | 5 | 2 extra, both dated Oct 9 |
+| Elysian at St. Rose | 2 (Oct 8) | 4 | 2 missing |
+
+October reconciles exactly at account level: 9 in the export, 9 in the deck. The
+Leads panel shows both figures side by side wherever the deck reports at that
+scope, and offers no comparison for a single property in a single month, because
+the deck does not report that. Seven Onyx rows repeat an email address, so 152
+submissions are 145 distinct people.
 
 ## Data notes
 
@@ -86,25 +110,45 @@ identical impressions, clicks and conversions — so counting it would double SE
 The deck carries a **Monthly Performance** table for each tactic, and those tables
 are the only month split in the report. They are account level: no tactic breaks a
 month out by property. They reconcile exactly to the flight totals —
-Display 40,911 + 116,509 = 157,420, Social 10,736 + 33,292 = 44,028,
-SEM 8,926 + 20,120 = 29,046.
+Display 40,911 + 120,533 + 8,356 = 169,800; Social 10,736 + 34,135 + 4,636 = 49,507;
+SEM 8,926 + 20,378 + 1,154 = 30,458.
 
-The period pills therefore behave differently by tab, and the dashboard says which
-case you are in:
+So on **All three** the period pills are exact, and on a property tab they are not:
+Delivery and Tactics fall back to the full flight and the page says so. The one
+exception is the Leads panel, where dates come from the Meta export and the month
+really is that property's.
 
-| Tab | August / September |
-|---|---|
-| All three | exact — delivery and tactics come straight from the monthly tables |
-| The Onyx | exact for Social only; Onyx runs the account's single Meta campaign |
-| Camino Al Norte, Elysian | not reported; the page shows the full flight and says so |
+**Meta used to be the exception and no longer is.** Until 5 October it ran a single
+campaign, for The Onyx, so its monthly figures were that property's in full. Camino
+Al Norte launched 5 October and Elysian 6 October, so the monthly Social table now
+mixes all three and that shortcut has been removed from the template.
 
-August covers 19–31 (13 days) and September 1–29 (29 days), so the totals are not
-comparable on their own. The impressions tile shows a per-day rate, and September
-carries a per-day change against August.
+The months are 13, 30 and 8 days long, so the totals are not comparable on their
+own. The impressions tile shows a per-day rate and a per-day change against the
+month before.
+
+**September was restated.** The previous deck, cut at 29 September, reported
+116,509 Display and 33,292 Social impressions for the month; this one reports
+120,533 and 34,135. One extra day plus pulseMax finalising the numbers.
 
 Everything below Tactics — campaigns, creative, ad groups, keywords, fences, zips,
 geography — is flight level in the source and carries a **Full flight** chip when a
 month is selected.
+
+## October pacing
+
+Every tactic fell sharply in the first eight days of October, on a per-day basis:
+
+| Tactic | Sep / day | Oct / day | Change |
+|---|---|---|---|
+| Display | 4,018 | 1,045 | −74% |
+| Social | 1,138 | 580 | −49% |
+| SEM | 679 | 144 | −79% |
+
+Search also recorded no conversions at all in October, against 13 in September.
+Eight days is a short window and the last days of a pulseMax pull can still be
+settling, so this is flagged in the dashboard rather than interpreted. Worth
+checking budget pacing before reading it as a performance drop.
 
 ## SEM is attributed at campaign level
 
